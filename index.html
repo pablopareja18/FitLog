@@ -232,6 +232,7 @@ function defaultData() {
     sessions: [],
     bodyLog: [],
     photos: [],
+    manualRMs: [], // { exName, kg, date }
     profile: { name: '', height: '' },
     startDate: today(),
     onboardingDone: false,
@@ -437,9 +438,9 @@ function RoutineCard({ r, data, onStart }) {
       h('span', { className: 'badge badge-blue' }, `${exercises.length} ejerc.`)
     ),
     h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 } },
-      exercises.map((e, i) => h('span', { key: i, style: { fontSize: 11, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 99 } }, `${e.icon || '💪'} ${e.name}`))
+      exercises.map((e, i) => h('span', { key: i, style: { fontSize: 11, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 99 } }, e.name))
     ),
-    h('button', { className: 'btn btn-primary', style: { padding: '10px' }, onClick: onStart }, '⚡ Empezar entreno')
+    h('button', { className: 'btn btn-primary', style: { padding: '10px' }, onClick: onStart }, 'Empezar entreno')
   );
 }
 
@@ -535,7 +536,6 @@ function NuevaRutina({ initial, onCancel, onSave }) {
           h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Añade los ejercicios de esta rutina.')
         )
       : exercises.map((e, i) => h('div', { key: i, className: 'card', style: { marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 } },
-          h('div', { className: 'ex-icon' }, e.icon || '💪'),
           h('div', { style: { flex: 1 } },
             h('div', { className: 'ex-name' }, e.name),
             h('div', { className: 'ex-sub' }, e.group || ''),
@@ -557,24 +557,12 @@ function NuevaRutina({ initial, onCancel, onSave }) {
 // ── AÑADIR EJERCICIO ──────────────────────────────────────────────────────────
 function AnadirEjercicio({ onCancel, onSave }) {
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState('💪');
   const [group, setGroup] = useState('Torso');
-  const icons = ['💪','🏋️','🔙','⬆️','⬇️','🦵','⚡','🏃','🍑','🔽','🤸','🧗','🎯','🔥'];
 
   return h('div', null,
     h('div', { style: { marginBottom: 16 } },
       h('div', { className: 'label' }, 'Nombre del ejercicio'),
       h('input', { className: 'input', value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Press banca', autoFocus: true }),
-    ),
-    h('div', { style: { marginBottom: 16 } },
-      h('div', { className: 'label' }, 'Icono'),
-      h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-        icons.map(ic => h('button', { key: ic, onClick: () => setIcon(ic), style: {
-          fontSize: 20, padding: '7px 9px', borderRadius: 8, cursor: 'pointer',
-          background: ic === icon ? 'var(--accent-dim)' : 'var(--surface2)',
-          border: ic === icon ? '1px solid var(--accent)' : '1px solid var(--border)',
-        }}, ic))
-      ),
     ),
     h('div', { style: { marginBottom: 24 } },
       h('div', { className: 'label' }, 'Grupo muscular'),
@@ -583,9 +571,8 @@ function AnadirEjercicio({ onCancel, onSave }) {
       ),
     ),
     h('button', {
-      className: 'btn btn-primary',
-      style: { marginBottom: 10 },
-      onClick: () => { if (!name.trim()) { alert('Escribe el nombre del ejercicio'); return; } onSave({ name, icon, group }); }
+      className: 'btn btn-primary', style: { marginBottom: 10 },
+      onClick: () => { if (!name.trim()) { alert('Escribe el nombre del ejercicio'); return; } onSave({ name, group }); }
     }, 'Añadir a la rutina'),
     h('button', { className: 'btn btn-secondary', onClick: onCancel }, 'Cancelar'),
   );
@@ -793,18 +780,22 @@ function ProgressTab({ data, update }) {
 
   // ── STATS CALCULADOS ──
 
-  // Volumen semanal últimas 8 semanas
-  const weeklyVols = [], weekLabels = [];
-  for (let i = 7; i >= 0; i--) {
+  // Volumen semanal últimas 12 semanas (estilo Strava: línea con área)
+  const weeklyVols = [], weekMonthLabels = [];
+  for (let i = 11; i >= 0; i--) {
     const wEnd = new Date(); wEnd.setDate(wEnd.getDate() - i * 7);
     const wStart = new Date(wEnd); wStart.setDate(wStart.getDate() - 6);
     const vol = data.sessions.filter(s => { const d = new Date(s.date + 'T00:00:00'); return d >= wStart && d <= wEnd; }).reduce((a, s) => a + calcVol(s.sets), 0);
     weeklyVols.push(Math.round(vol));
-    weekLabels.push(i === 0 ? 'Esta' : `S-${i}`);
+    // Label: solo mostrar el mes cuando cambia
+    const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const prevEnd = new Date(); prevEnd.setDate(prevEnd.getDate() - (i+1) * 7);
+    const showLabel = i === 11 || wEnd.getMonth() !== prevEnd.getMonth();
+    weekMonthLabels.push(showLabel ? monthNames[wEnd.getMonth()] : '');
   }
   const maxVol = Math.max(...weeklyVols, 1);
-  const thisWeekVol = weeklyVols[7];
-  const lastWeekVol = weeklyVols[6];
+  const thisWeekVol = weeklyVols[11];
+  const lastWeekVol = weeklyVols[10];
   const volDiff = lastWeekVol > 0 ? Math.round((thisWeekVol - lastWeekVol) / lastWeekVol * 100) : null;
 
   // Volumen por grupo muscular (esta semana)
@@ -822,10 +813,12 @@ function ProgressTab({ data, update }) {
   });
   const maxGroupVol = Math.max(...Object.values(groupVols), 1);
 
-  // 1RM estimado por ejercicio (mejor de todos los registros)
+  // 1RM estimado por ejercicio (Epley)
   const estimated1RM = allExNames.map(name => {
     let best = 0;
     data.sessions.forEach(s => { (s.sets[name]||[]).forEach(x => { const e = epley(x.kg||0, x.reps||0); if (e > best) best = e; }); });
+    // También considerar registros manuales
+    (data.manualRMs || []).filter(m => m.exName === name).forEach(m => { if (m.kg > best) best = m.kg; });
     return { name, kg: best };
   }).filter(x => x.kg > 0).sort((a,b) => b.kg - a.kg);
 
@@ -838,8 +831,8 @@ function ProgressTab({ data, update }) {
     }).sort((a,b) => a.date.localeCompare(b.date)) : [];
   const max1RMHist = Math.max(...ex1RMHistory.map(x => x.kg), 1);
 
-  // Máximos reales por repeticiones exactas (1R/3R/5R/6R)
-  const rmTargets = { '1R': 1, '3R': 3, '5R': 5, '6R': 6 };
+  // Máximos reales por repeticiones exactas (3R/5R/6R) — sin 1R
+  const rmTargets = { '1RM': null, '3R': 3, '5R': 5, '6R': 6 };
   const targetReps = rmTargets[rmTab];
   const exMaxes = rmTab === '1RM' ? estimated1RM : allExNames.map(name => {
     let best = 0;
@@ -848,16 +841,27 @@ function ProgressTab({ data, update }) {
   }).filter(x => x.kg > 0).sort((a,b) => b.kg - a.kg);
   const maxKgAll = Math.max(...exMaxes.map(x => x.kg), 1);
 
-  // PRs automáticos (sesiones donde se batió el 1RM estimado)
+  // PRs: solo registros reales de 1 repetición (no estimaciones)
+  // Incluye registros manuales y sesiones con reps===1
   const prs = [];
-  const runningMax = {};
+  const runningMax1R = {};
+  // Primero añadir manuales
+  const manualRMs = (data.manualRMs || []).slice().sort((a,b) => a.date.localeCompare(b.date));
+  manualRMs.forEach(m => {
+    if (m.kg > (runningMax1R[m.exName] || 0)) {
+      prs.push({ date: m.date, name: m.exName, kg: m.kg, manual: true });
+      runningMax1R[m.exName] = m.kg;
+    }
+  });
+  // Luego registros reales de 1 rep
   [...data.sessions].sort((a,b) => a.date.localeCompare(b.date)).forEach(s => {
     Object.keys(s.sets).forEach(exName => {
-      const best = Math.max(...(s.sets[exName]||[]).map(x => epley(x.kg||0, x.reps||0)));
-      if (best > 0 && best > (runningMax[exName] || 0)) {
-        if (runningMax[exName]) prs.push({ date: s.date, name: exName, kg: best });
-        runningMax[exName] = best;
-      }
+      (s.sets[exName]||[]).forEach(set => {
+        if (set.reps === 1 && (set.kg||0) > (runningMax1R[exName] || 0)) {
+          prs.push({ date: s.date, name: exName, kg: set.kg, manual: false });
+          runningMax1R[exName] = set.kg;
+        }
+      });
     });
   });
   prs.sort((a,b) => b.date.localeCompare(a.date));
@@ -870,19 +874,9 @@ function ProgressTab({ data, update }) {
     const count = data.sessions.filter(s => { const d = new Date(s.date + 'T00:00:00'); return d >= wStart && d <= wEnd; }).length;
     heatmap.push({ week: i, count });
   }
-  const streak = (() => {
-    let s = 0;
-    for (let i = heatmap.length - 1; i >= 0; i--) { if (heatmap[i].count > 0) s++; else break; }
-    return s;
-  })();
-  const avgPerWeek = heatmap.length > 0 ? (heatmap.reduce((a,x) => a + x.count, 0) / heatmap.length).toFixed(1) : 0;
-
-  // Detección de semana de descarga
-  const weeksConsecutive = (() => {
-    let c = 0;
-    for (let i = heatmap.length - 1; i >= 0; i--) { if (heatmap[i].count > 0) c++; else break; }
-    return c;
-  })();
+  const streak = (() => { let s = 0; for (let i = heatmap.length-1; i>=0; i--) { if (heatmap[i].count>0) s++; else break; } return s; })();
+  const avgPerWeek = heatmap.length > 0 ? (heatmap.reduce((a,x) => a+x.count, 0) / heatmap.length).toFixed(1) : 0;
+  const weeksConsecutive = streak;
 
   if (editingSession) {
     const session = data.sessions.find(s => s.id === editingSession);
@@ -949,12 +943,12 @@ function ProgressTab({ data, update }) {
     ),
 
     // ════ ESTADÍSTICAS ════
-    view === 'stats' && data.sessions.length === 0
+    view === 'stats' && data.sessions.length === 0 && (data.manualRMs || []).length === 0
       ? h('div', { className: 'empty' }, h('p', null, 'Completa tu primer entreno para ver estadísticas.'))
       : view === 'stats' && h('div', null,
 
           // ── 1. RESUMEN SEMANAL ──
-          h('div', { className: 'section-title' }, 'Esta semana vs semana anterior'),
+          h('div', { className: 'section-title' }, 'Esta semana'),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 } },
             h('div', { className: 'stat-card' },
               h('div', { className: 'stat-val' }, thisWeekVol > 999 ? `${(thisWeekVol/1000).toFixed(1)}k` : thisWeekVol),
@@ -972,24 +966,57 @@ function ProgressTab({ data, update }) {
             ),
           ),
 
-          // ── 2. VOLUMEN SEMANAL ──
-          h('div', { className: 'section-title' }, 'Volumen semanal (kg)'),
-          h('div', { className: 'card', style: { marginBottom: 16 } },
-            h('div', { style: { display: 'flex', gap: 6, alignItems: 'flex-end' } },
-              h('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 100, flexShrink: 0 } },
-                [maxVol, Math.round(maxVol*0.5), 0].map((v,i) =>
-                  h('span', { key: i, style: { fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)', lineHeight: 1 } }, v > 999 ? `${(v/1000).toFixed(1)}k` : v)
+          // ── 2. VOLUMEN SEMANAL estilo Strava (línea + área) ──
+          h('div', { className: 'section-title' }, 'Volumen últimas 12 semanas'),
+          h('div', { className: 'card', style: { marginBottom: 16, paddingBottom: 8 } },
+            weeklyVols.every(v => v === 0)
+              ? h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Sin datos todavía')
+              : h('div', null,
+                  h('svg', {
+                    viewBox: '0 0 300 100',
+                    style: { width: '100%', height: 120, overflow: 'visible' },
+                    xmlns: 'http://www.w3.org/2000/svg',
+                  }, (() => {
+                    const n = weeklyVols.length;
+                    const W = 300, H = 80, pad = 10;
+                    const xStep = (W - pad*2) / (n - 1);
+                    const pts = weeklyVols.map((v, i) => ({
+                      x: pad + i * xStep,
+                      y: H - Math.max(0, Math.round(v / maxVol * (H - 10))),
+                    }));
+                    const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                    const areaD = `${lineD} L${pts[pts.length-1].x.toFixed(1)},${H} L${pts[0].x.toFixed(1)},${H} Z`;
+                    // Y axis labels (right side)
+                    const yLabels = [maxVol, Math.round(maxVol/2), 0];
+                    return [
+                      // area fill
+                      h('path', { key: 'area', d: areaD, fill: 'rgba(200,241,53,0.12)', stroke: 'none' }),
+                      // line
+                      h('path', { key: 'line', d: lineD, fill: 'none', stroke: '#c8f135', strokeWidth: '2', strokeLinejoin: 'round', strokeLinecap: 'round' }),
+                      // Y axis gridlines + labels right
+                      ...yLabels.map((v, i) => {
+                        const y = H - Math.round(v / maxVol * (H - 10));
+                        return [
+                          h('line', { key: `gl${i}`, x1: pad, y1: y, x2: W - pad, y2: y, stroke: 'rgba(255,255,255,0.06)', strokeWidth: '1' }),
+                          h('text', { key: `yl${i}`, x: W - pad + 4, y: y + 3, fontSize: '8', fill: '#555', fontFamily: 'monospace' },
+                            v > 999 ? `${(v/1000).toFixed(1)}k` : v
+                          ),
+                        ];
+                      }).flat(),
+                      // dots
+                      ...pts.map((p, i) => h('circle', {
+                        key: `dot${i}`,
+                        cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: i === n-1 ? '4' : '2.5',
+                        fill: i === n-1 ? '#c8f135' : '#1c1c1c',
+                        stroke: '#c8f135', strokeWidth: i === n-1 ? '0' : '1.5',
+                      })),
+                    ];
+                  })()),
+                  // X axis month labels
+                  h('div', { style: { display: 'flex', marginTop: 4 } },
+                    weekMonthLabels.map((l, i) => h('div', { key: i, style: { flex: 1, textAlign: 'center', fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)' } }, l))
+                  ),
                 )
-              ),
-              h('div', { style: { flex: 1, display: 'flex', alignItems: 'flex-end', gap: 4, height: 100 } },
-                weeklyVols.map((v, i) => h('div', { key: i, style: { flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' } },
-                  h('div', { style: { width: '100%', borderRadius: '3px 3px 0 0', background: i === 7 ? 'var(--accent)' : 'var(--surface2)', height: `${Math.max(v>0?4:0, Math.round(v/maxVol*90))}%`, minHeight: v>0?4:0 } })
-                ))
-              ),
-            ),
-            h('div', { style: { display: 'flex', gap: 4, marginTop: 4, paddingLeft: 28 } },
-              weekLabels.map((l,i) => h('div', { key: i, style: { flex: 1, textAlign: 'center', fontSize: 9, color: i===7 ? 'var(--accent)' : 'var(--text3)', fontFamily: 'var(--mono)' } }, l))
-            ),
           ),
 
           // ── 3. VOLUMEN POR GRUPO MUSCULAR ──
@@ -1006,37 +1033,39 @@ function ProgressTab({ data, update }) {
             ),
           ),
 
-          // ── 4. PRs DETECTADOS ──
+          // ── 4. REGISTRAR 1RM MANUAL ──
+          h('div', { className: 'section-title' }, '1RM personal'),
+          h(ManualRMSection, { data, update }),
+
+          // ── 5. RECORDS PERSONALES (solo 1 rep real o manual) ──
           prs.length > 0 && h('div', null,
-            h('div', { className: 'section-title' }, 'Records personales 🏆'),
+            h('div', { className: 'section-title' }, 'Records personales'),
             h('div', { className: 'card', style: { marginBottom: 16 } },
-              prs.slice(0, 5).map((pr, i) =>
-                h('div', { key: i, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < Math.min(prs.length,5)-1 ? '1px solid var(--border)' : 'none' } },
+              prs.slice(0, 8).map((pr, i) =>
+                h('div', { key: i, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < Math.min(prs.length,8)-1 ? '1px solid var(--border)' : 'none' } },
                   h('div', null,
                     h('div', { style: { fontSize: 13, fontWeight: 600 } }, pr.name),
-                    h('div', { style: { fontSize: 11, color: 'var(--text2)' } }, fmtDate(pr.date)),
+                    h('div', { style: { fontSize: 11, color: 'var(--text2)' } }, `${fmtDate(pr.date)}${pr.manual ? ' · registro manual' : ' · 1 rep'}`),
                   ),
-                  h('div', { style: { textAlign: 'right' } },
-                    h('span', { className: 'badge badge-amber' }, `1RM est. ${pr.kg} kg`),
-                  )
+                  h('span', { className: 'badge badge-amber' }, `${pr.kg} kg`),
                 )
               )
             ),
           ),
 
-          // ── 5. MÁXIMOS POR EJERCICIO ──
+          // ── 6. MÁXIMOS POR EJERCICIO (sin pestaña 1R) ──
           h('div', { className: 'section-title' }, 'Máximos por ejercicio'),
           h('div', { style: { display: 'flex', background: 'var(--surface2)', borderRadius: 8, padding: 3, marginBottom: 10, gap: 2 } },
-            ['1RM','1R','3R','5R','6R'].map(tab => h('button', { key: tab, onClick: () => setRmTab(tab), style: {
-              flex: 1, padding: '5px 0', borderRadius: 6, border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 500,
+            ['1RM','3R','5R','6R'].map(tab => h('button', { key: tab, onClick: () => setRmTab(tab), style: {
+              flex: 1, padding: '6px 0', borderRadius: 6, border: 'none', cursor: 'pointer',
+              fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 500,
               background: rmTab === tab ? 'var(--accent)' : 'transparent',
               color: rmTab === tab ? '#0a0a0a' : 'var(--text3)',
             }}, tab))
           ),
           h('div', { style: { fontSize: 11, color: 'var(--text3)', marginBottom: 10 } },
-            rmTab === '1RM' ? '1RM estimado con fórmula de Epley (kg × (1 + reps/30))' :
-            `Peso máximo registrado en exactamente ${rmTargets[rmTab]} repeticiones`
+            rmTab === '1RM' ? 'Estimado con Epley (kg × (1 + reps/30)) + registros manuales' :
+            `Peso máximo en exactamente ${rmTargets[rmTab]} repeticiones`
           ),
           h('div', { className: 'card', style: { marginBottom: 16 } },
             exMaxes.length === 0
@@ -1048,7 +1077,7 @@ function ProgressTab({ data, update }) {
                 ))
           ),
 
-          // ── 6. PROGRESIÓN 1RM POR EJERCICIO ──
+          // ── 7. PROGRESIÓN 1RM ──
           h('div', { className: 'section-title' }, 'Progresión 1RM estimado'),
           h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 } },
             allExNames.map(name => h('button', { key: name, onClick: () => setSelectedEx1RM(selectedEx1RM === name ? null : name), style: {
@@ -1060,22 +1089,22 @@ function ProgressTab({ data, update }) {
           ),
           selectedEx1RM && ex1RMHistory.length > 1
             ? h('div', { className: 'card', style: { marginBottom: 16 } },
-                h('div', { style: { display: 'flex', gap: 6, alignItems: 'flex-end' } },
-                  h('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 80, flexShrink: 0 } },
-                    [max1RMHist, Math.round(max1RMHist*0.5)].map((v,i) =>
-                      h('span', { key: i, style: { fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)', lineHeight: 1 } }, `${v}kg`)
-                    )
-                  ),
-                  h('div', { style: { flex: 1, display: 'flex', alignItems: 'flex-end', gap: 3, height: 80 } },
-                    ex1RMHistory.map((x,i) => h('div', { key: i, style: { flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' } },
-                      h('div', { style: { width: '100%', borderRadius: '3px 3px 0 0', background: i === ex1RMHistory.length-1 ? 'var(--accent)' : 'var(--blue)', height: `${Math.max(4, Math.round(x.kg/max1RMHist*90))}%` } })
-                    ))
-                  ),
+                h('svg', { viewBox: '0 0 300 80', style: { width: '100%', height: 90, overflow: 'visible' }, xmlns: 'http://www.w3.org/2000/svg' },
+                  (() => {
+                    const n = ex1RMHistory.length;
+                    const W = 300, H = 70, pad = 10;
+                    const xStep = n > 1 ? (W - pad*2) / (n-1) : 0;
+                    const pts = ex1RMHistory.map((x, i) => ({ x: pad + i * xStep, y: H - Math.max(4, Math.round((x.kg - max1RMHist*0.7) / (max1RMHist * 0.3) * (H-10))) }));
+                    const lineD = pts.map((p, i) => `${i===0?'M':'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                    const areaD = `${lineD} L${pts[n-1].x.toFixed(1)},${H} L${pts[0].x.toFixed(1)},${H} Z`;
+                    return [
+                      h('path', { key: 'a', d: areaD, fill: 'rgba(91,156,246,0.15)', stroke: 'none' }),
+                      h('path', { key: 'l', d: lineD, fill: 'none', stroke: '#5b9cf6', strokeWidth: '2', strokeLinejoin: 'round' }),
+                      ...pts.map((p, i) => h('circle', { key: i, cx: p.x.toFixed(1), cy: p.y.toFixed(1), r: i===n-1?'4':'2.5', fill: i===n-1?'#5b9cf6':'#1c1c1c', stroke: '#5b9cf6', strokeWidth: '1.5' })),
+                    ];
+                  })()
                 ),
-                h('div', { style: { display: 'flex', gap: 3, marginTop: 4, paddingLeft: 24 } },
-                  ex1RMHistory.map((x,i) => h('div', { key: i, style: { flex: 1, textAlign: 'center', fontSize: 8, color: 'var(--text3)', fontFamily: 'var(--mono)' } }, fmtDate(x.date)))
-                ),
-                h('div', { style: { marginTop: 10, fontSize: 12, color: 'var(--text2)' } },
+                h('div', { style: { marginTop: 6, fontSize: 12, color: 'var(--text2)' } },
                   `${ex1RMHistory[0].kg} kg → ${ex1RMHistory[ex1RMHistory.length-1].kg} kg (+${ex1RMHistory[ex1RMHistory.length-1].kg - ex1RMHistory[0].kg} kg)`
                 ),
               )
@@ -1083,7 +1112,7 @@ function ProgressTab({ data, update }) {
                 h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Necesitas al menos 2 sesiones con este ejercicio.')
               ),
 
-          // ── 7. CONSISTENCIA ──
+          // ── 8. CONSISTENCIA ──
           h('div', { className: 'section-title' }, 'Consistencia'),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 } },
             h('div', { className: 'stat-card' },
@@ -1097,11 +1126,11 @@ function ProgressTab({ data, update }) {
           ),
           h('div', { className: 'card', style: { marginBottom: 8 } },
             h('div', { style: { fontSize: 11, color: 'var(--text2)', marginBottom: 8 } }, 'Actividad últimas 12 semanas'),
-            h('div', { style: { display: 'flex', gap: 5, flexWrap: 'wrap' } },
+            h('div', { style: { display: 'flex', gap: 5 } },
               heatmap.map((w, i) => {
                 const lvl = w.count === 0 ? 0 : w.count === 1 ? 1 : w.count === 2 ? 2 : 3;
-                const bg = ['var(--surface2)', 'rgba(200,241,53,0.25)', 'rgba(200,241,53,0.6)', 'var(--accent)'][lvl];
-                return h('div', { key: i, title: `S-${11-i}: ${w.count} entrenos`, style: { width: 18, height: 18, borderRadius: 4, background: bg } });
+                const bg = ['var(--surface2)','rgba(200,241,53,0.25)','rgba(200,241,53,0.6)','var(--accent)'][lvl];
+                return h('div', { key: i, style: { flex: 1, height: 18, borderRadius: 3, background: bg } });
               })
             ),
             h('div', { style: { display: 'flex', gap: 6, marginTop: 8, alignItems: 'center' } },
@@ -1111,10 +1140,80 @@ function ProgressTab({ data, update }) {
             ),
           ),
           weeksConsecutive >= 4 && h('div', { className: 'card-amber card', style: { marginBottom: 16 } },
-            h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--amber)' } }, '⚠ Semana de descarga recomendada'),
+            h('div', { style: { fontWeight: 600, fontSize: 13, color: 'var(--amber)' } }, 'Semana de descarga recomendada'),
             h('div', { style: { fontSize: 12, color: 'var(--text2)', marginTop: 4 } }, `Llevas ${weeksConsecutive} semanas consecutivas. Entrena al 50–60% esta semana.`),
           ),
         )
+  );
+}
+
+// ── MANUAL RM SECTION ─────────────────────────────────────────────────────────
+function ManualRMSection({ data, update }) {
+  const [adding, setAdding] = useState(false);
+  const [exName, setExName] = useState('');
+  const [kg, setKg] = useState('');
+  const [date, setDate] = useState(today());
+  const manualRMs = (data.manualRMs || []);
+
+  // Obtener nombres de ejercicios de rutinas
+  const exNames = [...new Set(data.routines.flatMap(r => (r.exercises||[]).map(e => e.name)))];
+
+  const save = () => {
+    if (!exName.trim() || !kg) return;
+    const newRM = { exName: exName.trim(), kg: parseFloat(kg), date };
+    // Actualizar si ya existe uno más antiguo para el mismo ejercicio, o añadir
+    update(d => {
+      const existing = (d.manualRMs || []).findIndex(m => m.exName === newRM.exName);
+      let next = [...(d.manualRMs || [])];
+      if (existing >= 0) {
+        // Solo reemplaza si el nuevo es mayor o más reciente
+        next[existing] = newRM.kg >= next[existing].kg ? newRM : next[existing];
+      } else {
+        next.push(newRM);
+      }
+      return { ...d, manualRMs: next };
+    });
+    setAdding(false); setExName(''); setKg(''); setDate(today());
+  };
+
+  return h('div', { style: { marginBottom: 16 } },
+    manualRMs.length > 0 && h('div', { className: 'card', style: { marginBottom: 8 } },
+      manualRMs.map((m, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', borderBottom: i < manualRMs.length-1 ? '1px solid var(--border)' : 'none' } },
+        h('div', null,
+          h('div', { style: { fontSize: 13, fontWeight: 600 } }, m.exName),
+          h('div', { style: { fontSize: 11, color: 'var(--text2)' } }, fmtDate(m.date)),
+        ),
+        h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+          h('span', { className: 'badge badge-amber' }, `${m.kg} kg`),
+          h('button', { onClick: () => update(d => ({ ...d, manualRMs: (d.manualRMs||[]).filter((_,j) => j !== i) })), style: { background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer', fontSize: 16 } }, '×'),
+        )
+      ))
+    ),
+    adding
+      ? h('div', { className: 'card', style: { marginBottom: 8 } },
+          h('div', { className: 'label', style: { marginBottom: 5 } }, 'Ejercicio'),
+          exNames.length > 0
+            ? h('select', { className: 'input', style: { marginBottom: 10 }, value: exName, onChange: e => setExName(e.target.value) },
+                h('option', { value: '' }, 'Selecciona...'),
+                exNames.map(n => h('option', { key: n, value: n }, n))
+              )
+            : h('input', { className: 'input', style: { marginBottom: 10 }, value: exName, onChange: e => setExName(e.target.value), placeholder: 'Nombre del ejercicio' }),
+          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 } },
+            h('div', null,
+              h('div', { className: 'label', style: { marginBottom: 5 } }, 'Peso (kg)'),
+              h('input', { className: 'input', type: 'number', inputMode: 'decimal', value: kg, onChange: e => setKg(e.target.value), placeholder: '100' }),
+            ),
+            h('div', null,
+              h('div', { className: 'label', style: { marginBottom: 5 } }, 'Fecha'),
+              h('input', { className: 'input', type: 'date', value: date, onChange: e => setDate(e.target.value) }),
+            ),
+          ),
+          h('div', { style: { display: 'flex', gap: 8 } },
+            h('button', { className: 'btn btn-primary', style: { flex: 1 }, onClick: save }, 'Guardar'),
+            h('button', { className: 'btn btn-secondary', style: { flex: 1 }, onClick: () => setAdding(false) }, 'Cancelar'),
+          )
+        )
+      : h('button', { className: 'btn btn-secondary', style: { padding: '8px' }, onClick: () => setAdding(true) }, '+ Añadir 1RM manual'),
   );
 }
 
