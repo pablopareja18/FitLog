@@ -1353,8 +1353,9 @@ function OnboardingScreen({ onFinish }) {
       emoji: '👋',
       title: 'Bienvenido a FitLog',
       body: 'Tu diario de entrenos personal. Registra cada sesión, sigue tu progreso y entrena con más cabeza.',
-      cta: 'Empezar',
+      cta: 'Entendido, empezar',
       action: () => setStep(1),
+      isBeta: true,
     },
     {
       emoji: '🏋️',
@@ -1404,7 +1405,29 @@ function OnboardingScreen({ onFinish }) {
     h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingBottom: 40 } },
       h('div', { style: { fontSize: 64, marginBottom: 28, lineHeight: 1 } }, current.emoji),
       h('div', { style: { fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 16, letterSpacing: '-0.02em' } }, current.title),
-      current.body && h('div', { style: { fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 32 } }, current.body),
+      current.body && h('div', { style: { fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 24 } }, current.body),
+
+      // Aviso beta solo en paso 0
+      current.isBeta && h('div', { style: {
+        background: 'var(--surface2)', border: '1px solid var(--border2)',
+        borderRadius: 12, padding: '14px 16px', marginBottom: 8,
+      } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 } },
+          h('span', { style: { background: 'var(--amber-dim)', color: 'var(--amber)', fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99, fontFamily: 'var(--mono)' } }, 'BETA'),
+          h('span', { style: { fontSize: 13, fontWeight: 600, color: 'var(--text)' } }, 'Versión de prueba'),
+        ),
+        h('div', { style: { fontSize: 12, color: 'var(--text2)', lineHeight: 1.7 } },
+          'Esta es una versión beta. Por ahora los datos se guardan solo en este dispositivo:',
+        ),
+        h('div', { style: { marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 } },
+          [
+            '📱 Tus datos son solo tuyos, nadie más los ve',
+            '⚠️ Si borras el navegador o cambias de móvil, se pierden',
+            '💬 Cuéntanos qué mejorarías — tu feedback construye la app',
+          ].map((line, i) => h('div', { key: i, style: { fontSize: 12, color: 'var(--text2)', display: 'flex', gap: 8 } }, line))
+        ),
+      ),
+
       current.isNameStep && h('div', null,
         h('div', { style: { fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 20 } }, 'Opcional, para personalizar la app.'),
         h('input', {
