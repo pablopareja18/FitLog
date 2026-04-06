@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<title>FitLog</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --border: #2a2a2a;
+    --border2: #333;
+    --accent: #c8f135;
+    --accent-dim: rgba(200,241,53,0.12);
+    --accent-dim2: rgba(200,241,53,0.06);
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --red: #ff4d4d;
+    --red-dim: rgba(255,77,77,0.12);
+    --amber: #ffb347;
+    --amber-dim: rgba(255,179,71,0.12);
+    --blue: #5b9cf6;
+    --blue-dim: rgba(91,156,246,0.12);
+    --font: 'Syne', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --nav-h: 64px;
+    --header-h: 56px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); overscroll-behavior: none; }
+  #root { height: 100%; display: flex; flex-direction: column; max-width: 430px; margin: 0 auto; position: relative; overflow: hidden; }
+
+  /* SCROLLABLE CONTENT */
+  .page { flex: 1; overflow-y: auto; padding: var(--header-h) 0 var(--nav-h); scrollbar-width: none; }
+  .page::-webkit-scrollbar { display: none; }
+  .page-inner { padding: 16px; }
+
+  /* HEADER */
+  .header {
+    position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    height: var(--header-h);
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 16px; z-index: 100;
+  }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  .header-logo { color: var(--accent); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  .header-action { background: none; border: 1px solid var(--border2); color: var(--text); padding: 6px 12px; border-radius: 99px; font-size: 12px; font-family: var(--font); cursor: pointer; }
+  .header-action:active { opacity: 0.7; }
+
+  /* NAV */
+  .nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    height: var(--nav-h);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    display: flex; z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .nav-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 4px; background: none; border: none;
+    cursor: pointer; color: var(--text3); font-family: var(--font);
+    transition: color 0.15s;
+  }
+  .nav-btn.active { color: var(--accent); }
+  .nav-btn svg { width: 20px; height: 20px; }
+  .nav-label { font-size: 10px; font-weight: 500; letter-spacing: 0.02em; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+  .card-accent { border-color: var(--accent); background: var(--accent-dim2); }
+  .card-amber { border-color: var(--amber); background: var(--amber-dim); }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; font-family: var(--mono); }
+  .badge-green { background: var(--accent-dim); color: var(--accent); }
+  .badge-amber { background: var(--amber-dim); color: var(--amber); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+
+  /* BUTTONS */
+  .btn { display: block; width: 100%; padding: 14px; border-radius: var(--radius); font-family: var(--font); font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-align: center; transition: opacity 0.15s, transform 0.1s; }
+  .btn:active { transform: scale(0.98); opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: #0a0a0a; }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid var(--red); }
+  .btn-sm { padding: 8px 14px; font-size: 12px; width: auto; display: inline-block; border-radius: var(--radius-sm); }
+
+  /* INPUTS */
+  .input { background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text); font-family: var(--mono); font-size: 15px; padding: 10px 12px; width: 100%; outline: none; }
+  .input:focus { border-color: var(--accent); }
+  .label { font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 5px; letter-spacing: 0.04em; text-transform: uppercase; }
+
+  /* SECTION TITLES */
+  .section-title { font-size: 11px; font-weight: 600; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; margin-top: 20px; }
+  .section-title:first-child { margin-top: 0; }
+
+  /* EXERCISE ROW */
+  .ex-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; gap: 12px; }
+  .ex-row:last-child { border-bottom: none; }
+  .ex-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .ex-name { font-size: 14px; font-weight: 600; }
+  .ex-sub { font-size: 12px; color: var(--text2); margin-top: 2px; font-family: var(--mono); }
+  .ex-vol { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--accent); font-family: var(--mono); flex-shrink: 0; }
+
+  /* STAT ROW */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card { background: var(--surface2); border-radius: var(--radius-sm); padding: 12px; }
+  .stat-val { font-size: 22px; font-weight: 700; color: var(--text); font-family: var(--mono); }
+  .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+  /* SETS TABLE */
+  .sets-header { display: grid; grid-template-columns: 28px 1fr 1fr 1fr 28px; gap: 6px; margin-bottom: 6px; padding: 0 2px; }
+  .sets-header span { font-size: 10px; color: var(--text3); text-align: center; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
+  .set-row { display: grid; grid-template-columns: 28px 1fr 1fr 1fr 28px; gap: 6px; margin-bottom: 6px; align-items: center; }
+  .set-num { font-size: 12px; color: var(--text3); text-align: center; font-family: var(--mono); }
+  .set-input-cell { background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; text-align: center; padding: 8px 4px; font-size: 14px; font-family: var(--mono); color: var(--text); outline: none; width: 100%; }
+  .set-input-cell:focus { border-color: var(--accent); }
+  .set-input-cell.done { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+  .set-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; text-align: center; padding: 0; }
+  .set-del:active { color: var(--red); }
+
+  /* CHART BARS */
+  .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; }
+  .bar { flex: 1; border-radius: 3px 3px 0 0; background: var(--surface2); transition: height 0.3s ease; min-height: 4px; position: relative; }
+  .bar.current { background: var(--accent); }
+  .bar.deload { background: var(--amber); }
+  .bar-labels { display: flex; gap: 4px; margin-top: 4px; }
+  .bar-label { flex: 1; text-align: center; font-size: 9px; color: var(--text3); font-family: var(--mono); }
+
+  /* PHOTO GRID */
+  .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .photo-card { aspect-ratio: 3/4; border-radius: var(--radius); overflow: hidden; position: relative; background: var(--surface2); border: 1px solid var(--border); cursor: pointer; }
+  .photo-card img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-card-add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--text3); }
+  .photo-card-add svg { width: 28px; height: 28px; }
+  .photo-card-add span { font-size: 12px; }
+  .photo-date-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); padding: 8px; font-size: 11px; color: var(--text); font-family: var(--mono); }
+
+  /* WEEK DOTS */
+  .week-dots { display: flex; flex-wrap: wrap; gap: 4px; }
+  .week-dot { width: 10px; height: 10px; border-radius: 2px; background: var(--surface2); }
+  .week-dot.w1 { background: rgba(200,241,53,0.25); }
+  .week-dot.w2 { background: rgba(200,241,53,0.5); }
+  .week-dot.w3 { background: rgba(200,241,53,0.75); }
+  .week-dot.w4 { background: var(--accent); }
+
+  /* DELOAD BANNER */
+  .deload-banner { display: flex; gap: 12px; align-items: flex-start; padding: 14px; background: var(--amber-dim); border: 1px solid var(--amber); border-radius: var(--radius); margin-bottom: 12px; }
+  .deload-icon { font-size: 20px; flex-shrink: 0; }
+  .deload-title { font-size: 13px; font-weight: 600; color: var(--amber); }
+  .deload-sub { font-size: 12px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
+
+  /* TIMER */
+  .timer-ring { text-align: center; padding: 16px 0; }
+  .timer-val { font-size: 48px; font-weight: 700; font-family: var(--mono); color: var(--accent); }
+  .timer-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+  /* PROGRESS LINE */
+  .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .prog-name { font-size: 12px; color: var(--text2); width: 90px; flex-shrink: 0; }
+  .prog-bar-bg { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; }
+  .prog-bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+  .prog-val { font-size: 12px; font-family: var(--mono); font-weight: 600; color: var(--text); width: 44px; text-align: right; }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: flex-end; justify-content: center; }
+  .modal { background: var(--surface); border: 1px solid var(--border2); border-radius: 20px 20px 0 0; width: 100%; max-width: 430px; padding: 20px 16px 32px; max-height: 80vh; overflow-y: auto; }
+  .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 20px; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+
+  /* EMPTY */
+  .empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+  .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.4; }
+  .empty p { font-size: 13px; line-height: 1.6; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  /* INLINE ROW */
+  .row { display: flex; align-items: center; gap: 8px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; }
+
+  /* ANIMATE */
+  @keyframes fadeIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+  .fade-in { animation: fadeIn 0.25s ease both; }
+
+  /* ACTIVE WORKOUT HEADER */
+  .workout-header-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 8px 16px; }
+  .workout-title-row { display: flex; align-items: center; justify-content: space-between; }
+  .workout-name { font-size: 15px; font-weight: 700; }
+  .workout-elapsed { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+
+<script>
+const { useState, useEffect, useRef, useCallback } = React;
+const h = React.createElement;
+
+// ── DATA HELPERS ──────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'fitlog_v2';
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData(); } catch { return defaultData(); }
+}
+function saveData(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
+
+function defaultData() {
+  return {
+    exercises: [],
+    routines: [],
+    sessions: [],
+    bodyLog: [],
+    photos: [],
+    profile: { name: '', height: '' },
+    startDate: today(),
+    onboardingDone: false,
+  };
+}
+
+function daysAgo(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d.toISOString().split('T')[0];
+}
+function today() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+function calcVol(sets) {
+  return Object.values(sets).flat().reduce((s, x) => s + (x.kg || 0) * (x.reps || 0), 0);
+}
+function weeksActive(startDate) {
+  const start = new Date(startDate + 'T00:00:00');
+  const now = new Date();
+  return Math.ceil((now - start) / (7 * 24 * 3600 * 1000));
+}
+function lastSet(sessions, exId) {
+  for (let i = sessions.length - 1; i >= 0; i--) {
+    const s = sessions[i].sets[exId];
+    if (s && s.length > 0) return s;
+  }
+  return null;
+}
+function maxKg(sessions, exId) {
+  let m = 0;
+  sessions.forEach(s => { const sets = s.sets[exId] || []; sets.forEach(x => { if (x.kg > m) m = x.kg; }); });
+  return m;
+}
+
+// ── ICONS ─────────────────────────────────────────────────────────────────────
+const IcoHome = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9'}));
+const IcoList = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'}));
+const IcoChart = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'}));
+const IcoUser = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'}));
+const IcoPlus = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M12 4v16m8-8H4'}));
+const IcoCamera = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z'}),h('circle',{cx:12,cy:13,r:3,strokeLinecap:'round',strokeLinejoin:'round'}));
+const IcoCheck = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:2,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M5 13l4 4L19 7'}));
+const IcoTrash = () => h('svg',{fill:'none',stroke:'currentColor',strokeWidth:1.8,viewBox:'0 0 24 24'},h('path',{strokeLinecap:'round',strokeLinejoin:'round',d:'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'}));
+
+// ── MAIN APP ──────────────────────────────────────────────────────────────────
+function App() {
+  const [data, setData] = useState(() => loadData());
+  const [tab, setTab] = useState('home');
+  const [activeWorkout, setActiveWorkout] = useState(null); // { routineId, sets:{exId:[{kg,reps,rir,done}]}, startTime }
+  const [modal, setModal] = useState(null); // 'new-routine' | 'new-exercise' | 'add-photo' | 'new-body'
+
+  const update = useCallback((fn) => {
+    setData(prev => { const next = fn(prev); saveData(next); return next; });
+  }, []);
+
+  const weeks = weeksActive(data.startDate);
+  const showDeload = weeks >= 4 && weeks <= 6;
+  const isNewUser = !data.onboardingDone;
+
+  // Determinar pantalla
+  let content;
+  if (isNewUser && !activeWorkout) {
+    content = h(OnboardingScreen, { onFinish: (name) => {
+      update(d => ({ ...d, profile: { ...d.profile, name }, onboardingDone: true }));
+      setTab('routines');
+    }});
+  } else if (activeWorkout) {
+    content = h(ActiveWorkout, { data, workout: activeWorkout, setWorkout: setActiveWorkout, update });
+  } else if (tab === 'home') {
+    content = h(HomeTab, { data, update, showDeload, weeks, startWorkout: (routineId) => {
+      const routine = data.routines.find(r => r.id === routineId);
+      const sets = {};
+      (routine.exercises || []).forEach(ex => {
+        sets[ex.name] = [{ kg: '', reps: '', rir: '', done: false }];
+      });
+      setActiveWorkout({ routineId, sets, startTime: Date.now() });
+    }});
+  } else if (tab === 'routines') {
+    content = h(RoutinesTab, { data, update });
+  } else if (tab === 'progress') {
+    content = h(ProgressTab, { data, update });
+  } else {
+    content = h(ProfileTab, { data, update, openModal: setModal });
+  }
+
+  return h('div', { id: 'root' },
+    !isNewUser && h(Header, { tab, activeWorkout, setTab }),
+    h('div', { className: 'page', style: isNewUser ? { padding: 0 } : {} }, h('div', { className: 'page-inner fade-in' }, content)),
+    !activeWorkout && !isNewUser && h(Nav, { tab, setTab }),
+    modal === 'new-exercise' && h(NewExerciseModal, { onClose: () => setModal(null), onSave: (ex) => {
+      update(d => ({ ...d, exercises: [...d.exercises, { ...ex, id: 'e' + Date.now() }] }));
+      setModal(null);
+    }}),
+    modal === 'new-routine' && h(NewRoutineModal, { exercises: data.exercises, onClose: () => setModal(null), onSave: (r) => {
+      update(d => ({ ...d, routines: [...d.routines, { ...r, id: 'r' + Date.now() }] }));
+      setModal(null);
+    }}),
+    modal === 'add-photo' && h(AddPhotoModal, { onClose: () => setModal(null), onSave: (photo) => {
+      update(d => ({ ...d, photos: [...d.photos, photo] }));
+      setModal(null);
+    }}),
+    modal === 'new-body' && h(NewBodyModal, { onClose: () => setModal(null), onSave: (entry) => {
+      update(d => ({ ...d, bodyLog: [...d.bodyLog, entry].sort((a,b) => a.date.localeCompare(b.date)) }));
+      setModal(null);
+    }}),
+  );
+}
+
+// ── HEADER ────────────────────────────────────────────────────────────────────
+function Header({ tab, activeWorkout, setTab }) {
+  const titles = { home: h('span', { className: 'header-logo' }, 'FitLog'), routines: 'Rutinas', progress: 'Progreso', profile: 'Perfil' };
+  return h('div', { className: 'header' },
+    tab !== 'home' && !activeWorkout
+      ? h('button', { onClick: () => setTab('home'), style: { background: 'none', border: 'none', color: 'var(--text2)', fontSize: 22, cursor: 'pointer', padding: '0 8px 0 0', lineHeight: 1 } }, '‹')
+      : h('div', { style: { width: 30 } }),
+    h('div', { className: 'header-title', style: { position: 'absolute', left: '50%', transform: 'translateX(-50%)' } },
+      activeWorkout ? '⚡ Entrenando' : titles[tab] || h('span', { className: 'header-logo' }, 'FitLog')
+    ),
+    h('div', { style: { width: 30 } }),
+  );
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function Nav({ tab, setTab }) {
+  const items = [
+    { id: 'home', label: 'Inicio', icon: IcoHome },
+    { id: 'routines', label: 'Rutinas', icon: IcoList },
+    { id: 'progress', label: 'Progreso', icon: IcoChart },
+    { id: 'profile', label: 'Perfil', icon: IcoUser },
+  ];
+  return h('div', { className: 'nav' },
+    items.map(item => h('button', {
+      key: item.id,
+      className: 'nav-btn' + (tab === item.id ? ' active' : ''),
+      onClick: () => setTab(item.id),
+    }, h(item.icon), h('span', { className: 'nav-label' }, item.label)))
+  );
+}
+
+// ── HOME TAB ──────────────────────────────────────────────────────────────────
+function HomeTab({ data, showDeload, weeks, startWorkout }) {
+  const today_str = today();
+  const recentSessions = [...data.sessions].sort((a,b) => b.date.localeCompare(a.date)).slice(0,3);
+  const lastWeight = data.bodyLog.length ? data.bodyLog[data.bodyLog.length - 1].weight : '—';
+
+  return h('div', null,
+    showDeload && h('div', { className: 'deload-banner' },
+      h('div', { className: 'deload-icon' }, '⚠'),
+      h('div', null,
+        h('div', { className: 'deload-title' }, 'Semana de descarga recomendada'),
+        h('div', { className: 'deload-sub' }, `Llevas ${weeks} semanas de carga progresiva. Entrena al 50–60% del peso habitual esta semana para recuperarte.`),
+      )
+    ),
+
+    h('div', { className: 'stat-grid', style: { marginBottom: 20 } },
+      h('div', { className: 'stat-card' },
+        h('div', { className: 'stat-val' }, data.sessions.length),
+        h('div', { className: 'stat-lbl' }, 'sesiones totales')
+      ),
+      h('div', { className: 'stat-card' },
+        h('div', { className: 'stat-val' }, `${lastWeight} kg`),
+        h('div', { className: 'stat-lbl' }, 'peso actual')
+      ),
+    ),
+
+    h('div', { className: 'section-title' }, 'Tus rutinas'),
+    data.routines.length === 0
+      ? h('div', { className: 'empty' }, h('p', null, 'Crea tu primera rutina en la pestaña Rutinas'))
+      : data.routines.map(r => h(RoutineCard, { key: r.id, r, data, onStart: () => startWorkout(r.id) })),
+
+    h('div', { className: 'section-title' }, 'Última actividad'),
+    recentSessions.length === 0
+      ? h('p', { style: { color: 'var(--text3)', fontSize: 13 } }, 'Nada todavía. ¡Empieza tu primer entreno!')
+      : recentSessions.map(s => {
+          const routine = data.routines.find(r => r.id === s.routineId);
+          const vol = calcVol(s.sets);
+          return h('div', { key: s.id, className: 'card', style: { marginBottom: 8 } },
+            h('div', { className: 'row-between' },
+              h('div', null,
+                h('div', { style: { fontWeight: 600, fontSize: 14 } }, routine ? routine.name : 'Entreno libre'),
+                h('div', { style: { fontSize: 12, color: 'var(--text2)', marginTop: 2 } }, fmtDate(s.date)),
+              ),
+              h('div', { style: { textAlign: 'right' } },
+                h('div', { className: 'badge badge-green' }, `${Math.round(vol)} kg vol.`),
+              )
+            )
+          );
+        })
+  );
+}
+
+function RoutineCard({ r, data, onStart }) {
+  const exercises = r.exercises || [];
+  return h('div', { className: 'card', style: { marginBottom: 10 } },
+    h('div', { className: 'row-between', style: { marginBottom: 10 } },
+      h('div', null,
+        h('div', { style: { fontWeight: 700, fontSize: 15 } }, r.name),
+        h('div', { style: { fontSize: 11, color: 'var(--text2)', marginTop: 2 } }, r.days || ''),
+      ),
+      h('span', { className: 'badge badge-blue' }, `${exercises.length} ejerc.`)
+    ),
+    h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 12 } },
+      exercises.map((e, i) => h('span', { key: i, style: { fontSize: 11, color: 'var(--text2)', background: 'var(--surface2)', padding: '2px 8px', borderRadius: 99 } }, `${e.icon || '💪'} ${e.name}`))
+    ),
+    h('button', { className: 'btn btn-primary', style: { padding: '10px' }, onClick: onStart }, '⚡ Empezar entreno')
+  );
+}
+
+// ── ROUTINES TAB ──────────────────────────────────────────────────────────────
+function RoutinesTab({ data, update }) {
+  const [mode, setMode] = useState(null); // null | {type:'new'} | {type:'edit', routine}
+
+  if (mode?.type === 'new') {
+    return h(NuevaRutina, {
+      initial: null,
+      onCancel: () => setMode(null),
+      onSave: (rutina) => {
+        update(d => ({ ...d, routines: [...d.routines, { ...rutina, id: 'r' + Date.now() }] }));
+        setMode(null);
+      }
+    });
+  }
+
+  if (mode?.type === 'edit') {
+    return h(NuevaRutina, {
+      initial: mode.routine,
+      onCancel: () => setMode(null),
+      onSave: (rutina) => {
+        update(d => ({ ...d, routines: d.routines.map(r => r.id === rutina.id ? rutina : r) }));
+        setMode(null);
+      }
+    });
+  }
+
+  return h('div', null,
+    data.routines.length === 0
+      ? h('div', { className: 'empty', style: { paddingTop: 60 } },
+          h('p', null, 'Aún no tienes rutinas.'),
+          h('p', { style: { marginTop: 6 } }, 'Crea la primera pulsando el botón de abajo.'),
+        )
+      : data.routines.map(r => {
+          const exercises = r.exercises || [];
+          return h('div', { key: r.id, className: 'card', style: { marginBottom: 10 } },
+            h('div', { className: 'row-between', style: { marginBottom: 8 } },
+              h('div', null,
+                h('div', { style: { fontWeight: 700, fontSize: 15 } }, r.name),
+                r.days && h('div', { style: { fontSize: 11, color: 'var(--text2)', marginTop: 2 } }, r.days),
+              ),
+              h('div', { style: { display: 'flex', gap: 6, alignItems: 'center' } },
+                h('span', { className: 'badge badge-blue' }, `${exercises.length} ejerc.`),
+                h('button', {
+                  onClick: () => setMode({ type: 'edit', routine: r }),
+                  style: { background: 'none', border: '1px solid var(--border2)', color: 'var(--text2)', borderRadius: 99, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'var(--font)' }
+                }, 'Editar'),
+                h('button', {
+                  onClick: () => { if (confirm(`¿Eliminar la rutina "${r.name}"?`)) update(d => ({ ...d, routines: d.routines.filter(x => x.id !== r.id) })); },
+                  style: { background: 'none', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: 99, padding: '3px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'var(--font)' }
+                }, 'Eliminar'),
+              )
+            ),
+            exercises.length === 0
+              ? h('p', { style: { fontSize: 12, color: 'var(--text3)' } }, 'Sin ejercicios aún.')
+              : exercises.map((e, i) => h('div', { key: i, style: { fontSize: 13, color: 'var(--text2)', padding: '3px 0', borderBottom: i < exercises.length - 1 ? '1px solid var(--border)' : 'none' } },
+                  `${e.icon || '💪'} ${e.name}`
+                ))
+          );
+        }),
+    h('button', { className: 'btn btn-primary', style: { marginTop: 12 }, onClick: () => setMode({ type: 'new' }) }, '+ Nueva rutina'),
+  );
+}
+
+// ── NUEVA / EDITAR RUTINA ─────────────────────────────────────────────────────
+function NuevaRutina({ initial, onCancel, onSave }) {
+  const [name, setName] = useState(initial?.name || '');
+  const [days, setDays] = useState(initial?.days || '');
+  const [exercises, setExercises] = useState(initial?.exercises || []);
+  const [addingEx, setAddingEx] = useState(false);
+
+  if (addingEx) {
+    return h(AnadirEjercicio, {
+      onCancel: () => setAddingEx(false),
+      onSave: (ex) => { setExercises(prev => [...prev, ex]); setAddingEx(false); }
+    });
+  }
+
+  return h('div', null,
+    h('div', { style: { marginBottom: 20 } },
+      h('div', { className: 'label' }, 'Nombre de la rutina'),
+      h('input', { className: 'input', value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Torso, Piernas, Full Body...' }),
+    ),
+    h('div', { style: { marginBottom: 20 } },
+      h('div', { className: 'label' }, 'Días (opcional)'),
+      h('input', { className: 'input', value: days, onChange: e => setDays(e.target.value), placeholder: 'Ej: Lunes / Jueves' }),
+    ),
+    h('div', { className: 'section-title' }, 'Ejercicios'),
+    exercises.length === 0
+      ? h('div', { className: 'card', style: { marginBottom: 10, textAlign: 'center', padding: '20px' } },
+          h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Añade los ejercicios de esta rutina.')
+        )
+      : exercises.map((e, i) => h('div', { key: i, className: 'card', style: { marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 } },
+          h('div', { className: 'ex-icon' }, e.icon || '💪'),
+          h('div', { style: { flex: 1 } },
+            h('div', { className: 'ex-name' }, e.name),
+            h('div', { className: 'ex-sub' }, e.group || ''),
+          ),
+          h('button', { onClick: () => setExercises(prev => prev.filter((_, j) => j !== i)), style: { background: 'none', border: 'none', color: 'var(--text3)', fontSize: 20, cursor: 'pointer', padding: '0 4px' } }, '×'),
+        )),
+    h('button', { className: 'btn btn-secondary', style: { marginBottom: 24 }, onClick: () => setAddingEx(true) }, '+ Añadir ejercicio'),
+    h('button', {
+      className: 'btn btn-primary', style: { marginBottom: 10 },
+      onClick: () => {
+        if (!name.trim()) { alert('Escribe un nombre para la rutina'); return; }
+        onSave({ ...(initial || {}), name, days, exercises });
+      }
+    }, initial ? 'Guardar cambios' : 'Guardar rutina'),
+    h('button', { className: 'btn btn-secondary', onClick: onCancel }, 'Cancelar'),
+  );
+}
+
+// ── AÑADIR EJERCICIO ──────────────────────────────────────────────────────────
+function AnadirEjercicio({ onCancel, onSave }) {
+  const [name, setName] = useState('');
+  const [icon, setIcon] = useState('💪');
+  const [group, setGroup] = useState('Torso');
+  const icons = ['💪','🏋️','🔙','⬆️','⬇️','🦵','⚡','🏃','🍑','🔽','🤸','🧗','🎯','🔥'];
+
+  return h('div', null,
+    h('div', { style: { marginBottom: 16 } },
+      h('div', { className: 'label' }, 'Nombre del ejercicio'),
+      h('input', { className: 'input', value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Press banca', autoFocus: true }),
+    ),
+    h('div', { style: { marginBottom: 16 } },
+      h('div', { className: 'label' }, 'Icono'),
+      h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+        icons.map(ic => h('button', { key: ic, onClick: () => setIcon(ic), style: {
+          fontSize: 20, padding: '7px 9px', borderRadius: 8, cursor: 'pointer',
+          background: ic === icon ? 'var(--accent-dim)' : 'var(--surface2)',
+          border: ic === icon ? '1px solid var(--accent)' : '1px solid var(--border)',
+        }}, ic))
+      ),
+    ),
+    h('div', { style: { marginBottom: 24 } },
+      h('div', { className: 'label' }, 'Grupo muscular'),
+      h('select', { className: 'input', value: group, onChange: e => setGroup(e.target.value) },
+        ['Torso','Piernas','Brazos','Hombros','Core','Cardio','Otro'].map(g => h('option', { key: g, value: g }, g))
+      ),
+    ),
+    h('button', {
+      className: 'btn btn-primary',
+      style: { marginBottom: 10 },
+      onClick: () => { if (!name.trim()) { alert('Escribe el nombre del ejercicio'); return; } onSave({ name, icon, group }); }
+    }, 'Añadir a la rutina'),
+    h('button', { className: 'btn btn-secondary', onClick: onCancel }, 'Cancelar'),
+  );
+}
+
+// ── ACTIVE WORKOUT ────────────────────────────────────────────────────────────
+function ActiveWorkout({ data, workout, setWorkout, update }) {
+  const routine = data.routines.find(r => r.id === workout.routineId);
+  const exercises = routine ? (routine.exercises || []) : [];
+  const [currentExIdx, setCurrentExIdx] = useState(0);
+  const [timer, setTimer] = useState(0);
+  const [restTimer, setRestTimer] = useState(null);
+  const [sets, setSets] = useState(workout.sets);
+  const [workoutDate, setWorkoutDate] = useState(today());
+  const [editingDate, setEditingDate] = useState(false);
+  const intervalRef = useRef(null);
+  const restRef = useRef(null);
+
+  useEffect(() => {
+    intervalRef.current = setInterval(() => setTimer(t => t + 1), 1000);
+    return () => clearInterval(intervalRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (restTimer === null) { clearInterval(restRef.current); return; }
+    restRef.current = setInterval(() => setRestTimer(t => { if (t <= 1) { clearInterval(restRef.current); return null; } return t - 1; }), 1000);
+    return () => clearInterval(restRef.current);
+  }, [restTimer !== null]);
+
+  const fmtTimer = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`;
+
+  if (exercises.length === 0) {
+    return h('div', { style: { padding: 24 } },
+      h('div', { className: 'empty' },
+        h('p', null, 'Esta rutina no tiene ejercicios.'),
+        h('p', { style: { marginTop: 8 } }, 'Ve a Rutinas para añadirlos.'),
+      ),
+      h('button', { className: 'btn btn-secondary', style: { marginTop: 24 }, onClick: () => setWorkout(null) }, '← Volver'),
+    );
+  }
+
+  const currentEx = exercises[Math.min(currentExIdx, exercises.length - 1)];
+  const exKey = currentEx.name;
+  const exSets = sets[exKey] || [{ kg: '', reps: '', rir: '', done: false }];
+
+  if (!sets[exKey]) setSets(prev => ({ ...prev, [exKey]: [{ kg: '', reps: '', rir: '', done: false }] }));
+
+  const updateSet = (idx, field, val) => setSets(prev => {
+    const next = { ...prev };
+    next[exKey] = (next[exKey] || []).map((s, i) => i === idx ? { ...s, [field]: val } : s);
+    return next;
+  });
+
+  const toggleDone = (idx) => {
+    setSets(prev => {
+      const next = { ...prev };
+      next[exKey] = next[exKey].map((s, i) => i === idx ? { ...s, done: !s.done } : s);
+      return next;
+    });
+    if (!exSets[idx].done) setRestTimer(120);
+  };
+
+  const addSet = () => setSets(prev => {
+    const next = { ...prev };
+    const arr = next[exKey] || [];
+    const last = arr[arr.length - 1] || {};
+    next[exKey] = [...arr, { kg: last.kg || '', reps: last.reps || '', rir: '', done: false }];
+    return next;
+  });
+
+  const removeSet = (idx) => setSets(prev => {
+    const next = { ...prev };
+    if ((next[exKey] || []).length <= 1) return next;
+    next[exKey] = next[exKey].filter((_, i) => i !== idx);
+    return next;
+  });
+
+  const finishWorkout = () => {
+    const cleanSets = {};
+    Object.entries(sets).forEach(([k, arr]) => {
+      const clean = arr
+        .map(({ done, kg, reps, rir }) => ({
+          kg: parseFloat(kg) || 0,
+          reps: parseInt(reps) || 0,
+          rir: rir !== '' && rir !== null && rir !== undefined ? parseInt(rir) : null,
+        }))
+        .filter(s => s.kg > 0 || s.reps > 0);
+      if (clean.length) cleanSets[k] = clean;
+    });
+    const session = {
+      id: 's' + Date.now(),
+      routineId: workout.routineId,
+      routineName: routine?.name || '',
+      date: workoutDate,
+      sets: cleanSets,
+    };
+    update(d => ({ ...d, sessions: [...d.sessions, session].sort((a, b) => a.date.localeCompare(b.date)) }));
+    setWorkout(null);
+  };
+
+  const vol = Object.values(sets).flat().reduce((a, s) => a + (parseFloat(s.kg) || 0) * (parseInt(s.reps) || 0), 0);
+  const doneSets = Object.values(sets).flat().filter(s => s.done).length;
+
+  return h('div', null,
+    h('div', { className: 'workout-header-bar' },
+      h('div', { className: 'workout-title-row' },
+        h('div', { className: 'workout-name' }, routine?.name || 'Entreno'),
+        h('div', { className: 'workout-elapsed' }, fmtTimer(timer)),
+      ),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 } },
+        editingDate
+          ? h('input', {
+              type: 'date', value: workoutDate,
+              onChange: ev => setWorkoutDate(ev.target.value),
+              onBlur: () => setEditingDate(false),
+              autoFocus: true,
+              style: { background: 'var(--surface2)', border: '1px solid var(--accent)', borderRadius: 6, color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 12, padding: '3px 8px' }
+            })
+          : h('button', {
+              onClick: () => setEditingDate(true),
+              style: { background: 'none', border: 'none', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 12, cursor: 'pointer', padding: 0 }
+            }, `📅 ${fmtDate(workoutDate)}  ✎`)
+      ),
+      h('div', { style: { display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' } },
+        exercises.map((e, i) => h('button', {
+          key: i, onClick: () => setCurrentExIdx(i),
+          style: {
+            padding: '4px 10px', borderRadius: 99, fontSize: 11, fontFamily: 'var(--mono)',
+            background: i === currentExIdx ? 'var(--accent)' : 'var(--surface2)',
+            color: i === currentExIdx ? '#0a0a0a' : 'var(--text2)',
+            border: 'none', cursor: 'pointer',
+          }
+        }, e.name))
+      )
+    ),
+    h('div', { style: { padding: 16 } },
+      restTimer !== null && h('div', { className: 'timer-ring' },
+        h('div', { className: 'timer-val' }, fmtTimer(restTimer)),
+        h('div', { className: 'timer-sub' }, 'descanso'),
+      ),
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 } },
+        h('div', { className: 'ex-icon', style: { width: 42, height: 42 } }, currentEx.icon || '💪'),
+        h('div', null,
+          h('div', { style: { fontWeight: 700, fontSize: 16 } }, currentEx.name),
+          h('div', { style: { fontSize: 12, color: 'var(--text2)' } }, `${doneSets} series · vol. ${Math.round(vol)} kg`),
+        )
+      ),
+      h('div', { className: 'sets-header' },
+        h('span', null, '#'), h('span', null, 'kg'), h('span', null, 'reps'), h('span', null, 'RIR'), h('span', null, ''),
+      ),
+      exSets.map((s, i) => h('div', { key: i, className: 'set-row' },
+        h('button', {
+          style: {
+            width: 24, height: 24, borderRadius: '50%', border: '1.5px solid', fontSize: 11,
+            fontFamily: 'var(--mono)', cursor: 'pointer', fontWeight: 600,
+            borderColor: s.done ? 'var(--accent)' : 'var(--border2)',
+            background: s.done ? 'var(--accent)' : 'transparent',
+            color: s.done ? '#0a0a0a' : 'var(--text3)',
+          },
+          onClick: () => toggleDone(i),
+        }, s.done ? '✓' : i + 1),
+        h('input', { className: 'set-input-cell' + (s.done ? ' done' : ''), type: 'number', value: s.kg, inputMode: 'decimal', placeholder: '0', onChange: ev => updateSet(i, 'kg', ev.target.value) }),
+        h('input', { className: 'set-input-cell' + (s.done ? ' done' : ''), type: 'number', value: s.reps, inputMode: 'numeric', placeholder: '0', onChange: ev => updateSet(i, 'reps', ev.target.value) }),
+        h('input', { className: 'set-input-cell' + (s.done ? ' done' : ''), type: 'number', value: s.rir ?? '', inputMode: 'numeric', placeholder: '—', onChange: ev => updateSet(i, 'rir', ev.target.value) }),
+        h('button', { className: 'set-del', onClick: () => removeSet(i) }, '×'),
+      )),
+      h('button', { className: 'btn btn-secondary', style: { marginTop: 8, marginBottom: 16 }, onClick: addSet }, '+ Serie'),
+      currentExIdx < exercises.length - 1
+        ? h('button', { className: 'btn btn-primary', style: { marginBottom: 8 }, onClick: () => setCurrentExIdx(i => i + 1) }, `Siguiente: ${exercises[currentExIdx + 1]?.name} →`)
+        : h('button', { className: 'btn btn-primary', onClick: finishWorkout }, '✓ Finalizar entreno'),
+      h('button', { className: 'btn btn-danger', style: { marginTop: 8 }, onClick: () => setWorkout(null) }, 'Cancelar'),
+    )
+  );
+}
+
+// ── PROGRESS TAB ──────────────────────────────────────────────────────────────
+function ProgressTab({ data, update }) {
+  const [view, setView] = useState('history');
+  const [editingSession, setEditingSession] = useState(null);
+  const [openMonths, setOpenMonths] = useState({});
+  const [rmTab, setRmTab] = useState('1R');
+
+  const sessions = [...data.sessions].sort((a, b) => b.date.localeCompare(a.date));
+
+  // Agrupar por mes
+  const byMonth = {};
+  sessions.forEach(s => {
+    const key = s.date.slice(0, 7); // YYYY-MM
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(s);
+  });
+  const monthKeys = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+  const fmtMonth = (key) => {
+    const [y, m] = key.split('-');
+    const names = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    return `${names[parseInt(m) - 1]} ${y}`;
+  };
+
+  // Volumen semanal últimas 8 semanas con valores reales
+  const weeklyVols = [];
+  const weekLabels = [];
+  for (let i = 7; i >= 0; i--) {
+    const wEnd = new Date(); wEnd.setDate(wEnd.getDate() - i * 7);
+    const wStart = new Date(wEnd); wStart.setDate(wStart.getDate() - 6);
+    const vol = data.sessions.filter(s => {
+      const d = new Date(s.date + 'T00:00:00'); return d >= wStart && d <= wEnd;
+    }).reduce((a, s) => a + calcVol(s.sets), 0);
+    weeklyVols.push(Math.round(vol));
+    weekLabels.push(i === 0 ? 'Esta' : `S-${i}`);
+  }
+  const maxVol = Math.max(...weeklyVols, 1);
+
+  // Máximos por ejercicio según repeticiones
+  const allExNames = [...new Set(data.sessions.flatMap(s => Object.keys(s.sets)))];
+  const rmFilter = { '1R': 1, '3R': 3, '6R': 6 };
+  const targetReps = rmFilter[rmTab];
+
+  const exMaxes = allExNames.map(name => {
+    let best = 0;
+    data.sessions.forEach(s => {
+      (s.sets[name] || []).forEach(set => {
+        if (set.reps === targetReps && (set.kg || 0) > best) best = set.kg;
+      });
+    });
+    return { name, kg: best };
+  }).filter(x => x.kg > 0).sort((a, b) => b.kg - a.kg);
+  const maxKgAll = Math.max(...exMaxes.map(x => x.kg), 1);
+
+  if (editingSession) {
+    const session = data.sessions.find(s => s.id === editingSession);
+    if (!session) { setEditingSession(null); return null; }
+    return h(EditSession, {
+      session,
+      onSave: (updated) => {
+        update(d => ({ ...d, sessions: d.sessions.map(s => s.id === updated.id ? updated : s).sort((a, b) => a.date.localeCompare(b.date)) }));
+        setEditingSession(null);
+      },
+      onDelete: () => {
+        update(d => ({ ...d, sessions: d.sessions.filter(s => s.id !== editingSession) }));
+        setEditingSession(null);
+      },
+      onCancel: () => setEditingSession(null),
+    });
+  }
+
+  const toggleMonth = (key) => setOpenMonths(prev => ({ ...prev, [key]: !prev[key] }));
+
+  return h('div', null,
+    // Selector pestaña principal
+    h('div', { style: { display: 'flex', background: 'var(--surface2)', borderRadius: 10, padding: 3, marginBottom: 16 } },
+      ['history', 'stats'].map(v => h('button', { key: v, onClick: () => setView(v), style: {
+        flex: 1, padding: '8px', borderRadius: 8, border: 'none', cursor: 'pointer',
+        fontFamily: 'var(--font)', fontSize: 13, fontWeight: 500,
+        background: view === v ? 'var(--surface)' : 'transparent',
+        color: view === v ? 'var(--text)' : 'var(--text3)',
+      }}, v === 'history' ? 'Historial' : 'Estadísticas'))
+    ),
+
+    // ── HISTORIAL ──
+    view === 'history' && h('div', null,
+      sessions.length === 0
+        ? h('div', { className: 'empty' }, h('p', null, 'Aún no tienes entrenos registrados.'))
+        : monthKeys.map(mKey => {
+            const isOpen = openMonths[mKey] !== false; // abierto por defecto el más reciente
+            const mSessions = byMonth[mKey];
+            const mVol = mSessions.reduce((a, s) => a + calcVol(s.sets), 0);
+            return h('div', { key: mKey, style: { marginBottom: 8 } },
+              // Cabecera mes (desplegable)
+              h('button', {
+                onClick: () => toggleMonth(mKey),
+                style: {
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: isOpen ? '12px 12px 0 0' : 12,
+                  padding: '12px 14px', cursor: 'pointer', fontFamily: 'var(--font)',
+                }
+              },
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+                  h('span', { style: { fontWeight: 700, fontSize: 14, color: 'var(--text)' } }, fmtMonth(mKey)),
+                  h('span', { className: 'badge badge-blue' }, `${mSessions.length} entrenos`),
+                ),
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+                  h('span', { style: { fontSize: 12, color: 'var(--text2)', fontFamily: 'var(--mono)' } }, `${Math.round(mVol)} kg`),
+                  h('span', { style: { color: 'var(--text3)', fontSize: 14, transform: isOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' } }, '▾'),
+                )
+              ),
+              // Entrenos del mes
+              isOpen && h('div', { style: { border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 12px 12px', overflow: 'hidden' } },
+                mSessions.map((s, i) => {
+                  const vol = calcVol(s.sets);
+                  const exCount = Object.keys(s.sets).length;
+                  const totalSets = Object.values(s.sets).reduce((a, arr) => a + arr.length, 0);
+                  return h('div', { key: s.id,
+                    onClick: () => setEditingSession(s.id),
+                    style: {
+                      padding: '12px 14px', cursor: 'pointer',
+                      borderBottom: i < mSessions.length - 1 ? '1px solid var(--border)' : 'none',
+                      background: 'var(--surface)',
+                    }
+                  },
+                    h('div', { className: 'row-between' },
+                      h('div', null,
+                        h('div', { style: { fontWeight: 600, fontSize: 13 } }, s.routineName || 'Entreno'),
+                        h('div', { style: { fontSize: 11, color: 'var(--text2)', marginTop: 2 } }, fmtDate(s.date)),
+                      ),
+                      h('div', { style: { textAlign: 'right' } },
+                        h('div', { className: 'badge badge-green' }, `${Math.round(vol)} kg`),
+                        h('div', { style: { fontSize: 10, color: 'var(--text3)', marginTop: 3 } }, `${exCount} ejerc · ${totalSets} series`),
+                      )
+                    )
+                  );
+                })
+              )
+            );
+          })
+    ),
+
+    // ── ESTADÍSTICAS ──
+    view === 'stats' && h('div', null,
+      // Gráfico volumen semanal con eje Y
+      h('div', { className: 'section-title' }, 'Volumen semanal (kg)'),
+      h('div', { className: 'card', style: { marginBottom: 16 } },
+        weeklyVols.every(v => v === 0)
+          ? h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Sin datos todavía')
+          : h('div', null,
+              // Eje Y + barras
+              h('div', { style: { display: 'flex', gap: 6, alignItems: 'flex-end' } },
+                // Eje Y
+                h('div', { style: { display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: 100, paddingBottom: 0, flexShrink: 0 } },
+                  [maxVol, Math.round(maxVol * 0.5), 0].map((v, i) =>
+                    h('span', { key: i, style: { fontSize: 9, color: 'var(--text3)', fontFamily: 'var(--mono)', lineHeight: 1 } }, v > 999 ? `${(v/1000).toFixed(1)}k` : v)
+                  )
+                ),
+                // Barras
+                h('div', { style: { flex: 1, display: 'flex', alignItems: 'flex-end', gap: 4, height: 100 } },
+                  weeklyVols.map((v, i) => h('div', { key: i, style: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, height: '100%', justifyContent: 'flex-end' } },
+                    h('div', { style: {
+                      width: '100%', borderRadius: '3px 3px 0 0',
+                      background: i === 7 ? 'var(--accent)' : 'var(--surface2)',
+                      height: `${Math.max(v > 0 ? 4 : 0, Math.round(v / maxVol * 90))}%`,
+                      minHeight: v > 0 ? 4 : 0,
+                    }}),
+                  ))
+                ),
+              ),
+              h('div', { style: { display: 'flex', gap: 4, marginTop: 4, paddingLeft: 28 } },
+                weekLabels.map((l, i) => h('div', { key: i, style: { flex: 1, textAlign: 'center', fontSize: 9, color: i === 7 ? 'var(--accent)' : 'var(--text3)', fontFamily: 'var(--mono)' } }, l))
+              ),
+            )
+      ),
+
+      // Máximos por ejercicio con pestañas 1R/3R/6R
+      h('div', { className: 'section-title' }, 'Máximos por ejercicio'),
+      h('div', { style: { display: 'flex', background: 'var(--surface2)', borderRadius: 8, padding: 3, marginBottom: 10, width: 'fit-content' } },
+        ['1R', '3R', '6R'].map(tab => h('button', { key: tab, onClick: () => setRmTab(tab), style: {
+          padding: '5px 16px', borderRadius: 6, border: 'none', cursor: 'pointer',
+          fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 500,
+          background: rmTab === tab ? 'var(--accent)' : 'transparent',
+          color: rmTab === tab ? '#0a0a0a' : 'var(--text3)',
+        }}, tab))
+      ),
+      h('div', { style: { fontSize: 11, color: 'var(--text3)', marginBottom: 10 } },
+        rmTab === '1R' ? 'Peso máximo registrado en 1 repetición' :
+        rmTab === '3R' ? 'Peso máximo registrado en exactamente 3 repeticiones' :
+                         'Peso máximo registrado en exactamente 6 repeticiones'
+      ),
+      h('div', { className: 'card' },
+        exMaxes.length === 0
+          ? h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, `Sin registros de ${rmTab} todavía`)
+          : exMaxes.map(({ name, kg }) => h('div', { key: name, className: 'prog-row' },
+              h('div', { className: 'prog-name', style: { width: 100 } }, name),
+              h('div', { className: 'prog-bar-bg' }, h('div', { className: 'prog-bar-fill', style: { width: `${Math.round(kg / maxKgAll * 100)}%` } })),
+              h('div', { className: 'prog-val' }, `${kg} kg`)
+            ))
+      ),
+    )
+  );
+}
+
+// ── EDIT SESSION ──────────────────────────────────────────────────────────────
+function EditSession({ session, onSave, onDelete, onCancel }) {
+  const [date, setDate] = useState(session.date);
+  const [sets, setSets] = useState(JSON.parse(JSON.stringify(session.sets)));
+
+  const updateSet = (exName, idx, field, val) => setSets(prev => {
+    const next = { ...prev };
+    next[exName] = next[exName].map((s, i) => i === idx ? { ...s, [field]: val } : s);
+    return next;
+  });
+
+  const addSet = (exName) => setSets(prev => {
+    const next = { ...prev };
+    const arr = next[exName] || [];
+    const last = arr[arr.length - 1] || {};
+    next[exName] = [...arr, { kg: last.kg || 0, reps: last.reps || 0, rir: null }];
+    return next;
+  });
+
+  const removeSet = (exName, idx) => setSets(prev => {
+    const next = { ...prev };
+    if ((next[exName] || []).length <= 1) return next;
+    next[exName] = next[exName].filter((_, i) => i !== idx);
+    return next;
+  });
+
+  return h('div', null,
+    h('div', { className: 'section-title' }, 'Editando entreno'),
+    h('div', { style: { marginBottom: 16 } },
+      h('div', { className: 'label' }, 'Fecha'),
+      h('input', { type: 'date', className: 'input', value: date, onChange: e => setDate(e.target.value) }),
+    ),
+    Object.entries(sets).map(([exName, arr]) =>
+      h('div', { key: exName, className: 'card', style: { marginBottom: 10 } },
+        h('div', { style: { fontWeight: 700, fontSize: 14, marginBottom: 10 } }, exName),
+        h('div', { className: 'sets-header' },
+          h('span', null, '#'), h('span', null, 'kg'), h('span', null, 'reps'), h('span', null, 'RIR'), h('span', null, ''),
+        ),
+        arr.map((s, i) => h('div', { key: i, className: 'set-row' },
+          h('div', { className: 'set-num' }, i + 1),
+          h('input', { className: 'set-input-cell', type: 'number', value: s.kg || '', inputMode: 'decimal', onChange: ev => updateSet(exName, i, 'kg', parseFloat(ev.target.value) || 0) }),
+          h('input', { className: 'set-input-cell', type: 'number', value: s.reps || '', inputMode: 'numeric', onChange: ev => updateSet(exName, i, 'reps', parseInt(ev.target.value) || 0) }),
+          h('input', { className: 'set-input-cell', type: 'number', value: s.rir ?? '', inputMode: 'numeric', placeholder: '—', onChange: ev => updateSet(exName, i, 'rir', ev.target.value !== '' ? parseInt(ev.target.value) : null) }),
+          h('button', { className: 'set-del', onClick: () => removeSet(exName, i) }, '×'),
+        )),
+        h('button', { className: 'btn btn-secondary', style: { marginTop: 6, padding: '6px' }, onClick: () => addSet(exName) }, '+ Serie'),
+      )
+    ),
+    h('button', { className: 'btn btn-primary', style: { marginBottom: 8 }, onClick: () => onSave({ ...session, date, sets }) }, 'Guardar cambios'),
+    h('button', { className: 'btn btn-secondary', style: { marginBottom: 8 }, onClick: onCancel }, 'Cancelar'),
+    h('button', { className: 'btn btn-danger', onClick: () => { if (confirm('¿Borrar este entreno?')) onDelete(); } }, 'Borrar entreno'),
+  );
+}
+
+// ── PROFILE TAB ───────────────────────────────────────────────────────────────
+function ProfileTab({ data, update, openModal }) {
+  const weeks = weeksActive(data.startDate);
+  const lastWeight = data.bodyLog.length ? data.bodyLog[data.bodyLog.length - 1].weight : '—';
+  const maxW = data.bodyLog.length ? Math.max(...data.bodyLog.map(x => x.weight)) : 70;
+  const minW = data.bodyLog.length ? Math.min(...data.bodyLog.map(x => x.weight)) : 60;
+  const range = maxW - minW || 1;
+
+  // Semanas con actividad (dots)
+  const dotWeeks = Math.min(weeks + 4, 20);
+  const dots = Array.from({ length: dotWeeks }, (_, i) => {
+    const sessions = data.sessions.filter(s => {
+      const d = new Date(s.date + 'T00:00:00');
+      const wStart = new Date();
+      wStart.setDate(wStart.getDate() - (dotWeeks - 1 - i) * 7 - 6);
+      const wEnd = new Date();
+      wEnd.setDate(wEnd.getDate() - (dotWeeks - 1 - i) * 7);
+      return d >= wStart && d <= wEnd;
+    });
+    const level = sessions.length >= 3 ? 'w4' : sessions.length === 2 ? 'w3' : sessions.length === 1 ? 'w2' : 'w0';
+    return level;
+  });
+
+  return h('div', null,
+    h('div', { className: 'stat-grid', style: { marginBottom: 16 } },
+      h('div', { className: 'stat-card' },
+        h('div', { className: 'stat-val' }, `${lastWeight} kg`),
+        h('div', { className: 'stat-lbl' }, 'peso actual')
+      ),
+      h('div', { className: 'stat-card' },
+        h('div', { className: 'stat-val' }, weeks),
+        h('div', { className: 'stat-lbl' }, 'semanas activo')
+      ),
+    ),
+
+    h('div', { className: 'section-title' }, 'Historial de peso'),
+    h('div', { className: 'card', style: { marginBottom: 16 } },
+      data.bodyLog.length > 1 ? h('div', null,
+        h('div', { className: 'bar-chart', style: { height: 80 } },
+          data.bodyLog.map((x, i) => h('div', { key: i, className: 'bar' + (i === data.bodyLog.length - 1 ? ' current' : ''), style: { height: `${Math.max(4, Math.round((x.weight - minW) / range * 100))}%` } }))
+        ),
+        h('div', { className: 'bar-labels' },
+          data.bodyLog.map((x, i) => h('span', { key: i, className: 'bar-label' }, fmtDate(x.date)))
+        )
+      ) : h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Añade registros de peso para ver la evolución'),
+      h('button', { className: 'btn btn-secondary', style: { marginTop: 12, padding: '8px' }, onClick: () => openModal('new-body') }, '+ Registrar peso'),
+    ),
+
+    h('div', { className: 'section-title' }, 'Fotos de progreso'),
+    h('div', { className: 'photo-grid', style: { marginBottom: 12 } },
+      data.photos.map((p, i) => h('div', { key: i, className: 'photo-card' },
+        h('img', { src: p.url, alt: '' }),
+        h('div', { className: 'photo-date-label' }, fmtDate(p.date))
+      )),
+      h('div', { className: 'photo-card', onClick: () => openModal('add-photo') },
+        h('div', { className: 'photo-card-add' }, h(IcoCamera), h('span', null, 'Añadir foto'))
+      )
+    ),
+
+    h('div', { className: 'section-title' }, 'Actividad semanal'),
+    h('div', { className: 'card' },
+      h('div', { className: 'week-dots', style: { marginBottom: 8 } },
+        dots.map((d, i) => h('div', { key: i, className: `week-dot ${d}` }))
+      ),
+      h('div', { style: { fontSize: 11, color: 'var(--text3)' } }, `${data.sessions.length} sesiones totales · ${weeks} semanas registradas`)
+    ),
+  );
+}
+
+// ── MODALS ────────────────────────────────────────────────────────────────────
+function NewExerciseModal({ onClose, onSave }) {
+  const [name, setName] = useState('');
+  const [icon, setIcon] = useState('💪');
+  const [group, setGroup] = useState('Torso');
+  const icons = ['💪','🏋️','🔙','⬆️','⬇️','🦵','⚡','🏃','🍑','🔽','🤸','🧗'];
+  return h('div', { className: 'modal-overlay', onClick: onClose },
+    h('div', { className: 'modal', onClick: e => e.stopPropagation() },
+      h('div', { className: 'modal-handle' }),
+      h('div', { className: 'modal-title' }, 'Nuevo ejercicio'),
+      h('div', { className: 'label' }, 'Nombre'),
+      h('input', { className: 'input', style: { marginBottom: 12 }, value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Press inclinado' }),
+      h('div', { className: 'label' }, 'Icono'),
+      h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 } },
+        icons.map(ic => h('button', { key: ic, onClick: () => setIcon(ic), style: { fontSize: 20, background: ic === icon ? 'var(--accent-dim)' : 'var(--surface2)', border: ic === icon ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 8, padding: '6px 8px', cursor: 'pointer' } }, ic))
+      ),
+      h('div', { className: 'label' }, 'Grupo muscular'),
+      h('select', { className: 'input', style: { marginBottom: 16 }, value: group, onChange: e => setGroup(e.target.value) },
+        ['Torso','Piernas','Brazos','Hombros','Core','Cardio'].map(g => h('option', { key: g, value: g }, g))
+      ),
+      h('button', { className: 'btn btn-primary', onClick: () => { if (name) onSave({ name, icon, group }); } }, 'Guardar'),
+    )
+  );
+}
+
+function NewRoutineModal({ exercises, onClose, onSave }) {
+  const [name, setName] = useState('');
+  const [days, setDays] = useState('');
+  const [selected, setSelected] = useState([]);
+  const toggle = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  return h('div', { className: 'modal-overlay', onClick: onClose },
+    h('div', { className: 'modal', onClick: e => e.stopPropagation() },
+      h('div', { className: 'modal-handle' }),
+      h('div', { className: 'modal-title' }, 'Nueva rutina'),
+      h('div', { className: 'label' }, 'Nombre'),
+      h('input', { className: 'input', style: { marginBottom: 12 }, value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Piernas' }),
+      h('div', { className: 'label' }, 'Días'),
+      h('input', { className: 'input', style: { marginBottom: 12 }, value: days, onChange: e => setDays(e.target.value), placeholder: 'Ej: Martes / Viernes' }),
+      h('div', { className: 'label' }, 'Ejercicios'),
+      exercises.length === 0
+        ? h('p', { style: { fontSize: 12, color: 'var(--text3)', marginBottom: 16 } }, 'Añade ejercicios primero desde la sección de ejercicios.')
+        : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 } },
+            exercises.map(e => h('button', { key: e.id, onClick: () => toggle(e.id), style: {
+              padding: '5px 10px', borderRadius: 99, fontSize: 12,
+              background: selected.includes(e.id) ? 'var(--accent-dim)' : 'var(--surface2)',
+              color: selected.includes(e.id) ? 'var(--accent)' : 'var(--text2)',
+              border: selected.includes(e.id) ? '1px solid var(--accent)' : '1px solid var(--border)',
+              cursor: 'pointer',
+            }}, `${e.icon} ${e.name}`))
+          ),
+      h('button', { className: 'btn btn-primary', onClick: () => { if (name.trim()) { onSave({ name, days, exerciseIds: selected }); } else { alert('Escribe un nombre para la rutina'); } } }, 'Crear rutina'),
+    )
+  );
+}
+
+function AddPhotoModal({ onClose, onSave }) {
+  const [preview, setPreview] = useState(null);
+  const [date, setDate] = useState(today());
+  const inputRef = useRef(null);
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target.result);
+    reader.readAsDataURL(file);
+  };
+
+  return h('div', { className: 'modal-overlay', onClick: onClose },
+    h('div', { className: 'modal', onClick: e => e.stopPropagation() },
+      h('div', { className: 'modal-handle' }),
+      h('div', { className: 'modal-title' }, 'Añadir foto'),
+      preview
+        ? h('img', { src: preview, style: { width: '100%', borderRadius: 12, marginBottom: 12, maxHeight: 260, objectFit: 'cover' } })
+        : h('div', { className: 'photo-card', style: { width: '100%', height: 180, marginBottom: 12 }, onClick: () => inputRef.current?.click() },
+            h('div', { className: 'photo-card-add' }, h(IcoCamera), h('span', null, 'Seleccionar foto'))
+          ),
+      h('input', { ref: inputRef, type: 'file', accept: 'image/*', style: { display: 'none' }, onChange: handleFile }),
+      !preview && h('button', { className: 'btn btn-secondary', style: { marginBottom: 12 }, onClick: () => inputRef.current?.click() }, 'Elegir imagen'),
+      h('div', { className: 'label' }, 'Fecha'),
+      h('input', { className: 'input', type: 'date', value: date, onChange: e => setDate(e.target.value), style: { marginBottom: 16 } }),
+      h('button', { className: 'btn btn-primary', onClick: () => { if (preview) onSave({ url: preview, date }); } }, 'Guardar foto'),
+    )
+  );
+}
+
+function NewBodyModal({ onClose, onSave }) {
+  const [weight, setWeight] = useState('');
+  const [date, setDate] = useState(today());
+  return h('div', { className: 'modal-overlay', onClick: onClose },
+    h('div', { className: 'modal', onClick: e => e.stopPropagation() },
+      h('div', { className: 'modal-handle' }),
+      h('div', { className: 'modal-title' }, 'Registrar peso'),
+      h('div', { className: 'label' }, 'Peso (kg)'),
+      h('input', { className: 'input', type: 'number', inputMode: 'decimal', value: weight, onChange: e => setWeight(e.target.value), placeholder: '68.5', style: { marginBottom: 12 } }),
+      h('div', { className: 'label' }, 'Fecha'),
+      h('input', { className: 'input', type: 'date', value: date, onChange: e => setDate(e.target.value), style: { marginBottom: 16 } }),
+      h('button', { className: 'btn btn-primary', onClick: () => { if (weight) onSave({ date, weight: parseFloat(weight) }); } }, 'Guardar'),
+    )
+  );
+}
+
+// ── ONBOARDING ────────────────────────────────────────────────────────────────
+function OnboardingScreen({ onFinish }) {
+  const [step, setStep] = useState(0);
+  const [name, setName] = useState('');
+
+  const steps = [
+    {
+      emoji: '👋',
+      title: 'Bienvenido a FitLog',
+      body: 'Tu diario de entrenos personal. Registra cada sesión, sigue tu progreso y entrena con más cabeza.',
+      cta: 'Empezar',
+      action: () => setStep(1),
+    },
+    {
+      emoji: '🏋️',
+      title: 'Añade tus ejercicios',
+      body: 'Crea los ejercicios que haces normalmente: press banca, sentadilla, lo que sea. Tú decides la lista.',
+      cta: 'Siguiente',
+      action: () => setStep(2),
+    },
+    {
+      emoji: '📋',
+      title: 'Crea tus rutinas',
+      body: 'Agrupa los ejercicios en rutinas: Torso, Piernas, Full Body... y empieza a registrar cada entreno.',
+      cta: 'Siguiente',
+      action: () => setStep(3),
+    },
+    {
+      emoji: '📈',
+      title: 'Sigue tu progreso',
+      body: 'FitLog calcula tu volumen, muestra tu progresión y te avisa cuando toca semana de descarga.',
+      cta: 'Siguiente',
+      action: () => setStep(4),
+    },
+    {
+      emoji: '✏️',
+      title: '¿Cómo te llamas?',
+      body: null,
+      cta: 'Entrar a FitLog',
+      action: () => onFinish(name || 'Usuario'),
+      isNameStep: true,
+    },
+  ];
+
+  const current = steps[step];
+  const progress = (step / (steps.length - 1)) * 100;
+
+  return h('div', { style: { height: '100%', display: 'flex', flexDirection: 'column', padding: '48px 28px 40px', background: 'var(--bg)' } },
+    // progress dots
+    h('div', { style: { display: 'flex', gap: 6, marginBottom: 'auto' } },
+      steps.map((_, i) => h('div', { key: i, style: {
+        height: 3, flex: 1, borderRadius: 2,
+        background: i <= step ? 'var(--accent)' : 'var(--surface2)',
+        transition: 'background 0.3s',
+      }}))
+    ),
+
+    // main content
+    h('div', { style: { flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', paddingBottom: 40 } },
+      h('div', { style: { fontSize: 64, marginBottom: 28, lineHeight: 1 } }, current.emoji),
+      h('div', { style: { fontSize: 28, fontWeight: 700, lineHeight: 1.2, marginBottom: 16, letterSpacing: '-0.02em' } }, current.title),
+      current.body && h('div', { style: { fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 32 } }, current.body),
+      current.isNameStep && h('div', null,
+        h('div', { style: { fontSize: 15, color: 'var(--text2)', lineHeight: 1.7, marginBottom: 20 } }, 'Opcional, para personalizar la app.'),
+        h('input', {
+          className: 'input',
+          placeholder: 'Tu nombre',
+          value: name,
+          onChange: e => setName(e.target.value),
+          style: { fontSize: 18, padding: '14px 16px', marginBottom: 0 },
+          autoFocus: true,
+          onKeyDown: e => { if (e.key === 'Enter') current.action(); }
+        }),
+      ),
+    ),
+
+    // CTA
+    h('button', { className: 'btn btn-primary', style: { fontSize: 16, padding: '16px' }, onClick: () => {
+      if (current.isNameStep) { onFinish(name || 'Usuario'); } else { current.action(); }
+    }}, current.cta),
+    step > 0 && h('button', { style: { background: 'none', border: 'none', color: 'var(--text3)', fontSize: 13, marginTop: 14, cursor: 'pointer', fontFamily: 'var(--font)' }, onClick: () => setStep(s => s - 1) }, '← Atrás'),
+  );
+}
+
+// ── MOUNT ─────────────────────────────────────────────────────────────────────
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(h(App));
+</script>
+</body>
+</html>
