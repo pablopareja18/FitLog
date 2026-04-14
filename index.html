@@ -303,7 +303,11 @@ function App() {
       setTab('routines');
     }});
   } else if (activeWorkout) {
-    content = h(ActiveWorkout, { data, workout: activeWorkout, setWorkout: setActiveWorkout, update });
+    if (activeWorkout._summary) {
+      content = h(WorkoutSummary, { workout: activeWorkout, onClose: () => setActiveWorkout(null) });
+    } else {
+      content = h(ActiveWorkout, { data, workout: activeWorkout, setWorkout: setActiveWorkout, update });
+    }
   } else if (tab === 'home') {
     content = h(HomeTab, { data, update, showDeload, weeks, startWorkout: (routineId) => {
       const routine = data.routines.find(r => r.id === routineId);
@@ -332,8 +336,8 @@ function App() {
   }
 
   return h('div', { id: 'root' },
-    !isNewUser && h(Header, { tab, activeWorkout, setTab }),
-    h('div', { className: 'page', style: isNewUser ? { padding: 0 } : {} }, h('div', { className: 'page-inner fade-in' }, content)),
+    !isNewUser && !activeWorkout?._summary && h(Header, { tab, activeWorkout, setTab }),
+    h('div', { className: 'page', style: isNewUser || activeWorkout?._summary ? { padding: 0 } : {} }, h('div', { className: 'page-inner fade-in' }, content)),
     !activeWorkout && !isNewUser && h(Nav, { tab, setTab }),
     modal === 'new-exercise' && h(NewExerciseModal, { onClose: () => setModal(null), onSave: (ex) => {
       update(d => ({ ...d, exercises: [...d.exercises, { ...ex, id: 'e' + Date.now() }] }));
@@ -609,6 +613,121 @@ function AnadirEjercicio({ initial, onCancel, onSave }) {
   );
 }
 
+// ── WORKOUT SUMMARY ───────────────────────────────────────────────────────────
+const EQUIVALENCIAS = [
+  { kg: 8,        texto: 'un jamón ibérico de pata negra' },
+  { kg: 10,       texto: 'una bolsa de la compra bien cargada' },
+  { kg: 15,       texto: 'un microondas nuevo' },
+  { kg: 20,       texto: 'una maleta llena hasta los topes' },
+  { kg: 25,       texto: 'un bulldog inglés de competición' },
+  { kg: 35,       texto: 'un televisor de 55 pulgadas' },
+  { kg: 40,       texto: 'un pastor alemán adulto' },
+  { kg: 70,       texto: 'una lavadora de carga frontal' },
+  { kg: 130,      texto: 'una nevera americana' },
+  { kg: 150,      texto: 'una máquina recreativa arcade' },
+  { kg: 190,      texto: 'un león africano' },
+  { kg: 200,      texto: 'una moto de carretera' },
+  { kg: 250,      texto: 'una cabina telefónica clásica' },
+  { kg: 300,      texto: 'un oso pardo adulto' },
+  { kg: 480,      texto: 'un piano de cola de concierto' },
+  { kg: 600,      texto: 'una vaca frisona' },
+  { kg: 700,      texto: 'un caballo de carreras' },
+  { kg: 1100,     texto: 'un Seat Ibiza' },
+  { kg: 1500,     texto: 'la tortilla de patatas más grande del mundo' },
+  { kg: 1800,     texto: 'un Toyota RAV4' },
+  { kg: 2000,     texto: 'un rinoceronte blanco' },
+  { kg: 3500,     texto: 'una furgoneta de reparto' },
+  { kg: 4000,     texto: 'el toro de Osborne' },
+  { kg: 6000,     texto: 'un elefante africano' },
+  { kg: 7500,     texto: 'un camión pequeño' },
+  { kg: 8000,     texto: 'un Tiranosaurio Rex' },
+  { kg: 10000,    texto: 'un helicóptero militar' },
+  { kg: 12000,    texto: 'un autobús urbano lleno' },
+  { kg: 21000,    texto: 'la paella más grande del mundo' },
+  { kg: 60000,    texto: 'un tanque de guerra Leopard' },
+  { kg: 80000,    texto: 'un Boeing 737 cargado' },
+  { kg: 100000,   texto: 'la Torre Eiffel (casi)' },
+  { kg: 150000,   texto: 'una ballena azul adulta' },
+  { kg: 204000,   texto: 'la Estatua de la Libertad' },
+  { kg: 500000,   texto: 'un submarino de ataque' },
+  { kg: 7300000,  texto: 'la Torre Eiffel entera' },
+  { kg: 100000000, texto: 'un portaaviones USS Gerald Ford' },
+];
+
+function getEquivalencia(vol) {
+  if (vol <= 0) return null;
+  // Buscar cuántas veces cabe la equivalencia más cercana
+  let best = EQUIVALENCIAS[0];
+  for (let i = EQUIVALENCIAS.length - 1; i >= 0; i--) {
+    if (EQUIVALENCIAS[i].kg <= vol) { best = EQUIVALENCIAS[i]; break; }
+  }
+  const veces = Math.max(1, Math.round(vol / best.kg * 10) / 10);
+  const vecesStr = veces === 1 ? 'uno' :
+    veces < 2 ? 'casi dos' :
+    Number.isInteger(veces) ? veces.toString() :
+    veces.toFixed(1);
+  return { ...best, veces, vecesStr };
+}
+
+const MENSAJES = [
+  'Brutal. Eso es dedicación de verdad.',
+  'No hay excusas, solo resultados. Y hoy los tienes.',
+  'Tu yo del futuro te lo agradecerá.',
+  'Cada kilo levantado es un paso más cerca.',
+  'El cuerpo aguanta más de lo que la mente cree.',
+  'Consistencia es el arma secreta. Hoy la usaste.',
+  'Los que no entrenaron hoy no saben lo que se pierden.',
+  'Eso fue un entreno de verdad. Sin discusión.',
+];
+
+function WorkoutSummary({ workout, onClose }) {
+  const eq = getEquivalencia(workout.vol);
+  const mensaje = MENSAJES[Math.floor(Math.random() * MENSAJES.length)];
+
+  return h('div', { style: {
+    minHeight: '100%', display: 'flex', flexDirection: 'column',
+    alignItems: 'center', justifyContent: 'center',
+    padding: '40px 28px', background: 'var(--bg)', textAlign: 'center',
+  }},
+    // Círculo grande con volumen
+    h('div', { style: {
+      width: 140, height: 140, borderRadius: '50%',
+      border: '3px solid var(--accent)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      marginBottom: 28,
+      background: 'var(--accent-dim)',
+    }},
+      h('div', { style: { fontFamily: 'var(--mono)', fontSize: 32, fontWeight: 700, color: 'var(--accent)', lineHeight: 1 } },
+        workout.vol > 999 ? `${(workout.vol/1000).toFixed(1)}k` : workout.vol
+      ),
+      h('div', { style: { fontSize: 12, color: 'var(--accent)', marginTop: 4, fontFamily: 'var(--mono)' } }, 'kg totales'),
+    ),
+
+    h('div', { style: { fontSize: 22, fontWeight: 700, marginBottom: 8, letterSpacing: '-0.02em' } },
+      `Entreno completado`
+    ),
+    h('div', { style: { fontSize: 14, color: 'var(--text2)', marginBottom: 32, lineHeight: 1.6 } }, mensaje),
+
+    // Equivalencia
+    eq && h('div', { style: {
+      background: 'var(--surface)', border: '1px solid var(--border2)',
+      borderRadius: 16, padding: '20px 24px', marginBottom: 32, width: '100%',
+    }},
+      h('div', { style: { fontSize: 12, color: 'var(--text3)', marginBottom: 8, fontFamily: 'var(--mono)', textTransform: 'uppercase', letterSpacing: '0.06em' } },
+        'Equivale a levantar'
+      ),
+      h('div', { style: { fontSize: 18, fontWeight: 700, lineHeight: 1.4, color: 'var(--text)' } },
+        `${eq.vecesStr === 'uno' ? '' : `${eq.vecesStr}× `}${eq.texto}`
+      ),
+    ),
+
+    h('button', { className: 'btn btn-primary', style: { width: '100%' }, onClick: onClose },
+      'Volver al inicio'
+    ),
+  );
+}
+
 // ── ACTIVE WORKOUT ────────────────────────────────────────────────────────────
 function ActiveWorkout({ data, workout, setWorkout, update }) {
   const routine = data.routines.find(r => r.id === workout.routineId);
@@ -697,6 +816,7 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
         .filter(s => s.kg > 0 || s.reps > 0);
       if (clean.length) cleanSets[k] = clean;
     });
+    const totalVol = Object.values(cleanSets).flat().reduce((a, s) => a + s.kg * s.reps, 0);
     const session = {
       id: 's' + Date.now(),
       routineId: workout.routineId,
@@ -705,7 +825,7 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
       sets: cleanSets,
     };
     update(d => ({ ...d, sessions: [...d.sessions, session].sort((a, b) => a.date.localeCompare(b.date)) }));
-    setWorkout(null);
+    setWorkout({ _summary: true, vol: Math.round(totalVol), routineName: routine?.name || 'Entreno' });
   };
 
   const finishWorkout = () => saveWorkout(sets);
@@ -1453,6 +1573,31 @@ function ProfileTab({ data, update, openModal }) {
         dots.map((d, i) => h('div', { key: i, className: `week-dot ${d}` }))
       ),
       h('div', { style: { fontSize: 11, color: 'var(--text3)' } }, `${data.sessions.length} sesiones totales · ${weeks} semanas registradas`)
+    ),
+
+    h('div', { className: 'section-title', style: { marginTop: 28 } }, 'Aplicación'),
+    h('div', { className: 'card' },
+      h('div', { style: { fontSize: 13, color: 'var(--text2)', marginBottom: 12, lineHeight: 1.6 } },
+        'Si la app no muestra los últimos cambios, pulsa aquí para forzar la actualización. Tus datos no se perderán.'
+      ),
+      h('button', {
+        className: 'btn btn-secondary',
+        onClick: () => {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(regs => {
+              Promise.all(regs.map(r => r.unregister())).then(() => {
+                caches.keys().then(keys => {
+                  Promise.all(keys.map(k => caches.delete(k))).then(() => {
+                    window.location.reload(true);
+                  });
+                });
+              });
+            });
+          } else {
+            window.location.reload(true);
+          }
+        }
+      }, 'Buscar actualización'),
     ),
   );
 }
