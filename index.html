@@ -307,11 +307,21 @@ function App() {
   } else if (tab === 'home') {
     content = h(HomeTab, { data, update, showDeload, weeks, startWorkout: (routineId) => {
       const routine = data.routines.find(r => r.id === routineId);
+      // Buscar la última sesión de esta rutina
+      const lastSession = [...data.sessions]
+        .filter(s => s.routineId === routineId)
+        .sort((a, b) => b.date.localeCompare(a.date))[0];
       const sets = {};
       (routine.exercises || []).forEach(ex => {
-        sets[ex.name] = [{ kg: '', reps: '', rir: '', done: false }];
+        const prev = lastSession?.sets[ex.name];
+        if (prev && prev.length > 0) {
+          // Pre-rellenar con los datos del último entreno, sin marcar como done
+          sets[ex.name] = prev.map(s => ({ kg: s.kg || '', reps: s.reps || '', rir: s.rir ?? '', done: false }));
+        } else {
+          sets[ex.name] = [{ kg: '', reps: '', rir: '', done: false }];
+        }
       });
-      setActiveWorkout({ routineId, sets, startTime: Date.now() });
+      setActiveWorkout({ routineId, sets, startTime: Date.now(), lastSessionDate: lastSession?.date || null });
     }});
   } else if (tab === 'routines') {
     content = h(RoutinesTab, { data, update });
@@ -352,7 +362,7 @@ function Header({ tab, activeWorkout, setTab }) {
       ? h('button', { onClick: () => setTab('home'), style: { background: 'none', border: 'none', color: 'var(--text2)', fontSize: 22, cursor: 'pointer', padding: '0 8px 0 0', lineHeight: 1 } }, '‹')
       : h('div', { style: { width: 30 } }),
     h('div', { className: 'header-title', style: { position: 'absolute', left: '50%', transform: 'translateX(-50%)' } },
-      activeWorkout ? '⚡ Entrenando' : titles[tab] || h('span', { className: 'header-logo' }, 'FitLog')
+      activeWorkout ? 'Entrenando' : titles[tab] || h('span', { className: 'header-logo' }, 'FitLog')
     ),
     h('div', { style: { width: 30 } }),
   );
@@ -383,7 +393,7 @@ function HomeTab({ data, showDeload, weeks, startWorkout }) {
 
   return h('div', null,
     showDeload && h('div', { className: 'deload-banner' },
-      h('div', { className: 'deload-icon' }, '⚠'),
+      h('div', { className: 'deload-icon' }, '!'),
       h('div', null,
         h('div', { className: 'deload-title' }, 'Semana de descarga recomendada'),
         h('div', { className: 'deload-sub' }, `Llevas ${weeks} semanas de carga progresiva. Entrena al 50–60% del peso habitual esta semana para recuperarte.`),
@@ -499,7 +509,7 @@ function RoutinesTab({ data, update }) {
             exercises.length === 0
               ? h('p', { style: { fontSize: 12, color: 'var(--text3)' } }, 'Sin ejercicios aún.')
               : exercises.map((e, i) => h('div', { key: i, style: { fontSize: 13, color: 'var(--text2)', padding: '3px 0', borderBottom: i < exercises.length - 1 ? '1px solid var(--border)' : 'none' } },
-                  `${e.icon || '💪'} ${e.name}`
+                  e.name
                 ))
           );
         }),
@@ -511,18 +521,32 @@ function RoutinesTab({ data, update }) {
 function NuevaRutina({ initial, onCancel, onSave }) {
   const [name, setName] = useState(initial?.name || '');
   const [days, setDays] = useState(initial?.days || '');
-  const [exercises, setExercises] = useState(initial?.exercises || []);
-  const [addingEx, setAddingEx] = useState(false);
+  const [exercises, setExercises] = useState(
+    initial?.exercises ? JSON.parse(JSON.stringify(initial.exercises)) : []
+  );
+  const [exMode, setExMode] = useState(null); // null | {type:'add'} | {type:'edit', idx}
 
-  if (addingEx) {
+  if (exMode?.type === 'add') {
     return h(AnadirEjercicio, {
-      onCancel: () => setAddingEx(false),
-      onSave: (ex) => { setExercises(prev => [...prev, ex]); setAddingEx(false); }
+      initial: null,
+      onCancel: () => setExMode(null),
+      onSave: (ex) => { setExercises(prev => [...prev, ex]); setExMode(null); }
+    });
+  }
+
+  if (exMode?.type === 'edit') {
+    return h(AnadirEjercicio, {
+      initial: exercises[exMode.idx],
+      onCancel: () => setExMode(null),
+      onSave: (ex) => {
+        setExercises(prev => prev.map((e, i) => i === exMode.idx ? ex : e));
+        setExMode(null);
+      }
     });
   }
 
   return h('div', null,
-    h('div', { style: { marginBottom: 20 } },
+    h('div', { style: { marginBottom: 16 } },
       h('div', { className: 'label' }, 'Nombre de la rutina'),
       h('input', { className: 'input', value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Torso, Piernas, Full Body...' }),
     ),
@@ -535,14 +559,21 @@ function NuevaRutina({ initial, onCancel, onSave }) {
       ? h('div', { className: 'card', style: { marginBottom: 10, textAlign: 'center', padding: '20px' } },
           h('p', { style: { fontSize: 13, color: 'var(--text3)' } }, 'Añade los ejercicios de esta rutina.')
         )
-      : exercises.map((e, i) => h('div', { key: i, className: 'card', style: { marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 } },
+      : exercises.map((e, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, marginBottom: 6 } },
           h('div', { style: { flex: 1 } },
-            h('div', { className: 'ex-name' }, e.name),
-            h('div', { className: 'ex-sub' }, e.group || ''),
+            h('div', { style: { fontWeight: 600, fontSize: 13 } }, e.name),
+            h('div', { style: { fontSize: 11, color: 'var(--text2)', marginTop: 2 } }, e.group || ''),
           ),
-          h('button', { onClick: () => setExercises(prev => prev.filter((_, j) => j !== i)), style: { background: 'none', border: 'none', color: 'var(--text3)', fontSize: 20, cursor: 'pointer', padding: '0 4px' } }, '×'),
+          h('button', {
+            onClick: () => setExMode({ type: 'edit', idx: i }),
+            style: { background: 'none', border: '1px solid var(--border2)', color: 'var(--text2)', borderRadius: 6, padding: '4px 8px', fontSize: 11, cursor: 'pointer', fontFamily: 'var(--font)', marginRight: 4 }
+          }, 'Editar'),
+          h('button', {
+            onClick: () => setExercises(prev => prev.filter((_, j) => j !== i)),
+            style: { background: 'none', border: 'none', color: 'var(--text3)', fontSize: 18, cursor: 'pointer', padding: '0 2px', lineHeight: 1 }
+          }, '×'),
         )),
-    h('button', { className: 'btn btn-secondary', style: { marginBottom: 24 }, onClick: () => setAddingEx(true) }, '+ Añadir ejercicio'),
+    h('button', { className: 'btn btn-secondary', style: { marginBottom: 24 }, onClick: () => setExMode({ type: 'add' }) }, '+ Añadir ejercicio'),
     h('button', {
       className: 'btn btn-primary', style: { marginBottom: 10 },
       onClick: () => {
@@ -554,10 +585,10 @@ function NuevaRutina({ initial, onCancel, onSave }) {
   );
 }
 
-// ── AÑADIR EJERCICIO ──────────────────────────────────────────────────────────
-function AnadirEjercicio({ onCancel, onSave }) {
-  const [name, setName] = useState('');
-  const [group, setGroup] = useState('Torso');
+// ── AÑADIR / EDITAR EJERCICIO ─────────────────────────────────────────────────
+function AnadirEjercicio({ initial, onCancel, onSave }) {
+  const [name, setName] = useState(initial?.name || '');
+  const [group, setGroup] = useState(initial?.group || 'Torso');
 
   return h('div', null,
     h('div', { style: { marginBottom: 16 } },
@@ -573,7 +604,7 @@ function AnadirEjercicio({ onCancel, onSave }) {
     h('button', {
       className: 'btn btn-primary', style: { marginBottom: 10 },
       onClick: () => { if (!name.trim()) { alert('Escribe el nombre del ejercicio'); return; } onSave({ name, group }); }
-    }, 'Añadir a la rutina'),
+    }, initial ? 'Guardar cambios' : 'Añadir a la rutina'),
     h('button', { className: 'btn btn-secondary', onClick: onCancel }, 'Cancelar'),
   );
 }
@@ -588,6 +619,7 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
   const [sets, setSets] = useState(workout.sets);
   const [workoutDate, setWorkoutDate] = useState(today());
   const [editingDate, setEditingDate] = useState(false);
+  const [showFinishEarly, setShowFinishEarly] = useState(false);
   const intervalRef = useRef(null);
   const restRef = useRef(null);
 
@@ -598,7 +630,10 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
 
   useEffect(() => {
     if (restTimer === null) { clearInterval(restRef.current); return; }
-    restRef.current = setInterval(() => setRestTimer(t => { if (t <= 1) { clearInterval(restRef.current); return null; } return t - 1; }), 1000);
+    restRef.current = setInterval(() => setRestTimer(t => {
+      if (t <= 1) { clearInterval(restRef.current); return null; }
+      return t - 1;
+    }), 1000);
     return () => clearInterval(restRef.current);
   }, [restTimer !== null]);
 
@@ -650,9 +685,9 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
     return next;
   });
 
-  const finishWorkout = () => {
+  const saveWorkout = (setsToSave) => {
     const cleanSets = {};
-    Object.entries(sets).forEach(([k, arr]) => {
+    Object.entries(setsToSave).forEach(([k, arr]) => {
       const clean = arr
         .map(({ done, kg, reps, rir }) => ({
           kg: parseFloat(kg) || 0,
@@ -673,16 +708,66 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
     setWorkout(null);
   };
 
+  const finishWorkout = () => saveWorkout(sets);
+
   const vol = Object.values(sets).flat().reduce((a, s) => a + (parseFloat(s.kg) || 0) * (parseInt(s.reps) || 0), 0);
   const doneSets = Object.values(sets).flat().filter(s => s.done).length;
 
-  return h('div', null,
-    h('div', { className: 'workout-header-bar' },
-      h('div', { className: 'workout-title-row' },
-        h('div', { className: 'workout-name' }, routine?.name || 'Entreno'),
-        h('div', { className: 'workout-elapsed' }, fmtTimer(timer)),
+  // Ejercicios con al menos un dato registrado
+  const exWithData = exercises.filter(e => {
+    const arr = sets[e.name] || [];
+    return arr.some(s => (parseFloat(s.kg) > 0 || parseInt(s.reps) > 0));
+  });
+  const exWithoutData = exercises.filter(e => {
+    const arr = sets[e.name] || [];
+    return !arr.some(s => (parseFloat(s.kg) > 0 || parseInt(s.reps) > 0));
+  });
+
+  // Pantalla "terminar antes"
+  if (showFinishEarly) {
+    return h('div', { style: { padding: 16 } },
+      h('div', { style: { fontWeight: 700, fontSize: 16, marginBottom: 6 } }, 'Terminar antes de tiempo'),
+      h('div', { style: { fontSize: 13, color: 'var(--text2)', marginBottom: 20, lineHeight: 1.6 } },
+        'Se guardarán los ejercicios completados. Los siguientes no tienen datos y se descartarán:'
       ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 } },
+      exWithoutData.length > 0
+        ? h('div', { className: 'card', style: { marginBottom: 20 } },
+            exWithoutData.map((e, i) => h('div', { key: i, style: { fontSize: 13, color: 'var(--text2)', padding: '6px 0', borderBottom: i < exWithoutData.length - 1 ? '1px solid var(--border)' : 'none' } },
+              `— ${e.name}`
+            ))
+          )
+        : h('div', { style: { fontSize: 13, color: 'var(--accent)', marginBottom: 20 } }, 'Todos los ejercicios tienen datos.'),
+      exWithData.length > 0
+        ? h('div', { style: { fontSize: 13, color: 'var(--text2)', marginBottom: 16 } },
+            `Se guardarán: ${exWithData.map(e => e.name).join(', ')}`
+          )
+        : h('div', { style: { fontSize: 13, color: 'var(--red)', marginBottom: 16 } }, 'No hay nada que guardar.'),
+      h('button', {
+        className: 'btn btn-primary', style: { marginBottom: 8 },
+        onClick: () => {
+          // Guardar solo los ejercicios con datos
+          const filteredSets = {};
+          exWithData.forEach(e => { filteredSets[e.name] = sets[e.name]; });
+          saveWorkout(filteredSets);
+        }
+      }, exWithData.length > 0 ? 'Guardar y terminar' : 'Terminar sin guardar'),
+      h('button', { className: 'btn btn-secondary', onClick: () => setShowFinishEarly(false) }, '← Seguir entrenando'),
+    );
+  }
+
+  return h('div', null,
+    // ── HEADER ──
+    h('div', { className: 'workout-header-bar' },
+      // Timer grande
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 } },
+        h('div', { style: { fontWeight: 700, fontSize: 15 } }, routine?.name || 'Entreno'),
+        h('div', { style: {
+          fontFamily: 'var(--mono)', fontSize: 28, fontWeight: 700,
+          color: 'var(--accent)', letterSpacing: '-0.02em', lineHeight: 1,
+        }}, fmtTimer(timer)),
+      ),
+      // Fecha editable
+      h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 } },
         editingDate
           ? h('input', {
               type: 'date', value: workoutDate,
@@ -693,33 +778,57 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
             })
           : h('button', {
               onClick: () => setEditingDate(true),
-              style: { background: 'none', border: 'none', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 12, cursor: 'pointer', padding: 0 }
-            }, `📅 ${fmtDate(workoutDate)}  ✎`)
+              style: { background: 'none', border: 'none', color: 'var(--text3)', fontFamily: 'var(--mono)', fontSize: 11, cursor: 'pointer', padding: 0 }
+            }, workout.lastSessionDate
+              ? `${fmtDate(workoutDate)} · último: ${fmtDate(workout.lastSessionDate)}`
+              : `${fmtDate(workoutDate)} · primer registro`)
       ),
-      h('div', { style: { display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' } },
-        exercises.map((e, i) => h('button', {
-          key: i, onClick: () => setCurrentExIdx(i),
-          style: {
-            padding: '4px 10px', borderRadius: 99, fontSize: 11, fontFamily: 'var(--mono)',
-            background: i === currentExIdx ? 'var(--accent)' : 'var(--surface2)',
-            color: i === currentExIdx ? '#0a0a0a' : 'var(--text2)',
-            border: 'none', cursor: 'pointer',
-          }
-        }, e.name))
+      // Chips ejercicios
+      h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } },
+        exercises.map((e, i) => {
+          const hasData = (sets[e.name] || []).some(s => parseFloat(s.kg) > 0 || parseInt(s.reps) > 0);
+          return h('button', {
+            key: i, onClick: () => setCurrentExIdx(i),
+            style: {
+              padding: '4px 10px', borderRadius: 99, fontSize: 11, fontFamily: 'var(--mono)',
+              background: i === currentExIdx ? 'var(--accent)' : hasData ? 'var(--accent-dim)' : 'var(--surface2)',
+              color: i === currentExIdx ? '#0a0a0a' : hasData ? 'var(--accent)' : 'var(--text2)',
+              border: 'none', cursor: 'pointer',
+            }
+          }, e.name);
+        })
       )
     ),
+
+    // ── BODY ──
     h('div', { style: { padding: 16 } },
+      // Timer descanso
       restTimer !== null && h('div', { className: 'timer-ring' },
         h('div', { className: 'timer-val' }, fmtTimer(restTimer)),
         h('div', { className: 'timer-sub' }, 'descanso'),
       ),
-      h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 } },
-        h('div', { className: 'ex-icon', style: { width: 42, height: 42 } }, currentEx.icon || '💪'),
-        h('div', null,
-          h('div', { style: { fontWeight: 700, fontSize: 16 } }, currentEx.name),
-          h('div', { style: { fontSize: 12, color: 'var(--text2)' } }, `${doneSets} series · vol. ${Math.round(vol)} kg`),
-        )
+
+      // Nombre ejercicio + referencia anterior
+      h('div', { style: { marginBottom: 14 } },
+        h('div', { style: { fontWeight: 700, fontSize: 16, marginBottom: 4 } }, currentEx.name),
+        h('div', { style: { fontSize: 12, color: 'var(--text2)' } },
+          `${doneSets} series · vol. ${Math.round(vol)} kg`
+        ),
+        // Referencia del último entreno
+        workout.lastSessionDate && (() => {
+          const lastSession = data.sessions
+            .filter(s => s.routineId === workout.routineId)
+            .sort((a,b) => b.date.localeCompare(a.date))[0];
+          const lastSets = lastSession?.sets[exKey];
+          if (!lastSets || lastSets.length === 0) return null;
+          const summary = lastSets.map(s => `${s.kg}kg×${s.reps}`).join(' · ');
+          return h('div', { style: { fontSize: 11, color: 'var(--text3)', marginTop: 4, fontFamily: 'var(--mono)' } },
+            `Último: ${summary}`
+          );
+        })(),
       ),
+
+      // Tabla series
       h('div', { className: 'sets-header' },
         h('span', null, '#'), h('span', null, 'kg'), h('span', null, 'reps'), h('span', null, 'RIR'), h('span', null, ''),
       ),
@@ -739,11 +848,19 @@ function ActiveWorkout({ data, workout, setWorkout, update }) {
         h('input', { className: 'set-input-cell' + (s.done ? ' done' : ''), type: 'number', value: s.rir ?? '', inputMode: 'numeric', placeholder: '—', onChange: ev => updateSet(i, 'rir', ev.target.value) }),
         h('button', { className: 'set-del', onClick: () => removeSet(i) }, '×'),
       )),
+
       h('button', { className: 'btn btn-secondary', style: { marginTop: 8, marginBottom: 16 }, onClick: addSet }, '+ Serie'),
+
       currentExIdx < exercises.length - 1
         ? h('button', { className: 'btn btn-primary', style: { marginBottom: 8 }, onClick: () => setCurrentExIdx(i => i + 1) }, `Siguiente: ${exercises[currentExIdx + 1]?.name} →`)
-        : h('button', { className: 'btn btn-primary', onClick: finishWorkout }, '✓ Finalizar entreno'),
-      h('button', { className: 'btn btn-danger', style: { marginTop: 8 }, onClick: () => setWorkout(null) }, 'Cancelar'),
+        : h('button', { className: 'btn btn-primary', style: { marginBottom: 8 }, onClick: finishWorkout }, 'Finalizar entreno'),
+
+      h('button', {
+        className: 'btn btn-secondary', style: { marginBottom: 8 },
+        onClick: () => setShowFinishEarly(true)
+      }, 'Terminar antes de tiempo'),
+
+      h('button', { className: 'btn btn-danger', onClick: () => setWorkout(null) }, 'Cancelar sin guardar'),
     )
   );
 }
@@ -1340,61 +1457,6 @@ function ProfileTab({ data, update, openModal }) {
   );
 }
 
-// ── MODALS ────────────────────────────────────────────────────────────────────
-function NewExerciseModal({ onClose, onSave }) {
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('💪');
-  const [group, setGroup] = useState('Torso');
-  const icons = ['💪','🏋️','🔙','⬆️','⬇️','🦵','⚡','🏃','🍑','🔽','🤸','🧗'];
-  return h('div', { className: 'modal-overlay', onClick: onClose },
-    h('div', { className: 'modal', onClick: e => e.stopPropagation() },
-      h('div', { className: 'modal-handle' }),
-      h('div', { className: 'modal-title' }, 'Nuevo ejercicio'),
-      h('div', { className: 'label' }, 'Nombre'),
-      h('input', { className: 'input', style: { marginBottom: 12 }, value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Press inclinado' }),
-      h('div', { className: 'label' }, 'Icono'),
-      h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 } },
-        icons.map(ic => h('button', { key: ic, onClick: () => setIcon(ic), style: { fontSize: 20, background: ic === icon ? 'var(--accent-dim)' : 'var(--surface2)', border: ic === icon ? '1px solid var(--accent)' : '1px solid var(--border)', borderRadius: 8, padding: '6px 8px', cursor: 'pointer' } }, ic))
-      ),
-      h('div', { className: 'label' }, 'Grupo muscular'),
-      h('select', { className: 'input', style: { marginBottom: 16 }, value: group, onChange: e => setGroup(e.target.value) },
-        ['Torso','Piernas','Brazos','Hombros','Core','Cardio'].map(g => h('option', { key: g, value: g }, g))
-      ),
-      h('button', { className: 'btn btn-primary', onClick: () => { if (name) onSave({ name, icon, group }); } }, 'Guardar'),
-    )
-  );
-}
-
-function NewRoutineModal({ exercises, onClose, onSave }) {
-  const [name, setName] = useState('');
-  const [days, setDays] = useState('');
-  const [selected, setSelected] = useState([]);
-  const toggle = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  return h('div', { className: 'modal-overlay', onClick: onClose },
-    h('div', { className: 'modal', onClick: e => e.stopPropagation() },
-      h('div', { className: 'modal-handle' }),
-      h('div', { className: 'modal-title' }, 'Nueva rutina'),
-      h('div', { className: 'label' }, 'Nombre'),
-      h('input', { className: 'input', style: { marginBottom: 12 }, value: name, onChange: e => setName(e.target.value), placeholder: 'Ej: Piernas' }),
-      h('div', { className: 'label' }, 'Días'),
-      h('input', { className: 'input', style: { marginBottom: 12 }, value: days, onChange: e => setDays(e.target.value), placeholder: 'Ej: Martes / Viernes' }),
-      h('div', { className: 'label' }, 'Ejercicios'),
-      exercises.length === 0
-        ? h('p', { style: { fontSize: 12, color: 'var(--text3)', marginBottom: 16 } }, 'Añade ejercicios primero desde la sección de ejercicios.')
-        : h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 } },
-            exercises.map(e => h('button', { key: e.id, onClick: () => toggle(e.id), style: {
-              padding: '5px 10px', borderRadius: 99, fontSize: 12,
-              background: selected.includes(e.id) ? 'var(--accent-dim)' : 'var(--surface2)',
-              color: selected.includes(e.id) ? 'var(--accent)' : 'var(--text2)',
-              border: selected.includes(e.id) ? '1px solid var(--accent)' : '1px solid var(--border)',
-              cursor: 'pointer',
-            }}, `${e.icon} ${e.name}`))
-          ),
-      h('button', { className: 'btn btn-primary', onClick: () => { if (name.trim()) { onSave({ name, days, exerciseIds: selected }); } else { alert('Escribe un nombre para la rutina'); } } }, 'Crear rutina'),
-    )
-  );
-}
-
 function AddPhotoModal({ onClose, onSave }) {
   const [preview, setPreview] = useState(null);
   const [date, setDate] = useState(today());
@@ -1449,7 +1511,7 @@ function OnboardingScreen({ onFinish }) {
 
   const steps = [
     {
-      emoji: '👋',
+      emoji: '',
       title: 'Bienvenido a FitLog',
       body: 'Tu diario de entrenos personal. Registra cada sesión, sigue tu progreso y entrena con más cabeza.',
       cta: 'Entendido, empezar',
@@ -1457,28 +1519,28 @@ function OnboardingScreen({ onFinish }) {
       isBeta: true,
     },
     {
-      emoji: '🏋️',
+      emoji: '',
       title: 'Añade tus ejercicios',
       body: 'Crea los ejercicios que haces normalmente: press banca, sentadilla, lo que sea. Tú decides la lista.',
       cta: 'Siguiente',
       action: () => setStep(2),
     },
     {
-      emoji: '📋',
+      emoji: '',
       title: 'Crea tus rutinas',
       body: 'Agrupa los ejercicios en rutinas: Torso, Piernas, Full Body... y empieza a registrar cada entreno.',
       cta: 'Siguiente',
       action: () => setStep(3),
     },
     {
-      emoji: '📈',
+      emoji: '',
       title: 'Sigue tu progreso',
       body: 'FitLog calcula tu volumen, muestra tu progresión y te avisa cuando toca semana de descarga.',
       cta: 'Siguiente',
       action: () => setStep(4),
     },
     {
-      emoji: '✏️',
+      emoji: '',
       title: '¿Cómo te llamas?',
       body: null,
       cta: 'Entrar a FitLog',
@@ -1520,9 +1582,9 @@ function OnboardingScreen({ onFinish }) {
         ),
         h('div', { style: { marginTop: 8, display: 'flex', flexDirection: 'column', gap: 6 } },
           [
-            '📱 Tus datos son solo tuyos, nadie más los ve',
-            '⚠️ Si borras el navegador o cambias de móvil, se pierden',
-            '💬 Cuéntanos qué mejorarías — tu feedback construye la app',
+            'Tus datos son solo tuyos, nadie más los ve',
+            'Si borras el navegador o cambias de móvil, se pierden',
+            'Cuéntanos qué mejorarías — tu feedback construye la app',
           ].map((line, i) => h('div', { key: i, style: { fontSize: 12, color: 'var(--text2)', display: 'flex', gap: 8 } }, line))
         ),
       ),
