@@ -1,13 +1,14 @@
 {
   "name": "FitLog",
   "short_name": "FitLog",
-  "description": "Tu diario de entrenos personal",
-  "start_url": "/FitLog/",
-  "scope": "/FitLog/",
+  "description": "Tu diario de entrenos",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#0b0b0c",
+  "theme_color": "#0b0b0c",
+  "lang": "es",
   "icons": [
     {
       "src": "icon-192.png",
