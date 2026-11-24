@@ -1,0 +1,269 @@
+{
+  "fecha": "2026-11-24",
+  "sesion": "Pecho, hombro y tríceps",
+  "rutina": "coach_martes",
+  "programa": "2026-11-24T10:30",
+  "duracionMin": 49,
+  "notas": "",
+  "ejercicios": [
+    {
+      "id": "press-pecho-maquina",
+      "nombre": "Press de pecho en máquina",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 90,
+          "min": 8,
+          "max": 10,
+          "rir": "1"
+        },
+        {
+          "kg": 75,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 75,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 90,
+          "reps": 10,
+          "rir": 1
+        },
+        {
+          "tipo": "N",
+          "kg": 75,
+          "reps": 9,
+          "rir": 2
+        },
+        {
+          "tipo": "N",
+          "kg": 75,
+          "reps": 8,
+          "rir": 2
+        }
+      ]
+    },
+    {
+      "id": "press-inclinado-maquina",
+      "nombre": "Press inclinado en máquina",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 60,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 60,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 60,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 11,
+          "rir": 2
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 9,
+          "rir": 0
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 6,
+          "rir": 0
+        }
+      ]
+    },
+    {
+      "id": "contractor-pecho",
+      "nombre": "Contractor de pecho",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 47,
+          "min": 8,
+          "max": 12,
+          "rir": "1-2"
+        },
+        {
+          "kg": 47,
+          "min": 8,
+          "max": 12,
+          "rir": "1-2"
+        },
+        {
+          "kg": 47,
+          "min": 8,
+          "max": 12,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 47,
+          "reps": 8,
+          "rir": 2
+        },
+        {
+          "tipo": "N",
+          "kg": 47,
+          "reps": 7,
+          "rir": 0
+        },
+        {
+          "tipo": "N",
+          "kg": 47,
+          "reps": 7,
+          "rir": 0
+        }
+      ]
+    },
+    {
+      "id": "elevaciones-laterales",
+      "nombre": "Elevaciones laterales",
+      "notas": "En la primera serie si hubiese hecho más la técnica no sería adecuada bajo peso a 10",
+      "objetivo": [
+        {
+          "kg": 12.5,
+          "min": 10,
+          "max": 15,
+          "rir": "1"
+        },
+        {
+          "kg": 12.5,
+          "min": 10,
+          "max": 15,
+          "rir": "1"
+        },
+        {
+          "kg": 12.5,
+          "min": 10,
+          "max": 15,
+          "rir": "1"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 12.5,
+          "reps": 10,
+          "rir": 1
+        },
+        {
+          "tipo": "N",
+          "kg": 10,
+          "reps": 12,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 10,
+          "reps": 10,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "elevaciones-laterales-maquina",
+      "nombre": "Elevaciones laterales en máquina",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 40,
+          "min": 10,
+          "max": 12,
+          "rir": "1"
+        },
+        {
+          "kg": 40,
+          "min": 10,
+          "max": 12,
+          "rir": "1"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 40,
+          "reps": 12,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 40,
+          "reps": 12,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "extension-triceps-polea",
+      "nombre": "Extensión de tríceps en polea",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 60,
+          "min": 10,
+          "max": 15,
+          "rir": "1"
+        },
+        {
+          "kg": 60,
+          "min": 10,
+          "max": 15,
+          "rir": "1"
+        },
+        {
+          "kg": 60,
+          "min": 10,
+          "max": 15,
+          "rir": "1"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 12,
+          "rir": 5
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 8,
+          "rir": 0
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 9,
+          "rir": 0
+        }
+      ]
+    }
+  ],
+  "resumen": "FitLog · Pecho, hombro y tríceps · martes, 24/11/2026 · 49 min\n- Press de pecho en máquina: 90×10 RIR1, 75×9 RIR2, 75×8 RIR2\n- Press inclinado en máquina: 60×11 RIR2, 60×9 RIR0, 60×6 RIR0\n- Contractor de pecho: 47×8 RIR2, 47×7 RIR0, 47×7 RIR0\n- Elevaciones laterales: 12,5×10 RIR1, 10×12, 10×10 · nota: En la primera serie si hubiese hecho más la técnica no sería adecuada bajo peso a 10\n- Elevaciones laterales en máquina: 40×12, 40×12\n- Extensión de tríceps en polea: 60×12 RIR5, 60×8 RIR0, 60×9 RIR0"
+}
