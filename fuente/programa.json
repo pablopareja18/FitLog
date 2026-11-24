@@ -1,0 +1,99 @@
+{
+  "actualizado": "2026-11-24T10:30",
+  "semana": "Semana del 23 nov",
+  "inicio": "2026-11-23",
+  "nota": "Primera serie con 1-2 repeticiones en reserva. Si en la siguiente pierdes más de 2 reps, descansa más o baja un poco el peso.",
+  "sesiones": [
+    {
+      "id": "martes",
+      "dia": 1,
+      "nombre": "Pecho, hombro y tríceps",
+      "ejercicios": [
+        { "id": "press-pecho-maquina", "descanso": 180, "series": [
+          { "kg": 90, "reps": [8, 10], "rir": "1" },
+          { "kg": 75, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 75, "reps": [8, 10], "rir": "1-2" } ] },
+        { "id": "press-inclinado-maquina", "descanso": 150, "series": [
+          { "kg": 60, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 60, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 60, "reps": [8, 10], "rir": "1-2" } ] },
+        { "id": "contractor-pecho", "descanso": 90, "nota": "No abras más allá de la línea del pecho (hombro derecho)", "series": [
+          { "kg": 47, "reps": [8, 12], "rir": "1-2" },
+          { "kg": 47, "reps": [8, 12], "rir": "1-2" },
+          { "kg": 47, "reps": [8, 12], "rir": "1-2" } ] },
+        { "id": "elevaciones-laterales", "descanso": 90, "series": [
+          { "kg": 12.5, "reps": [10, 15], "rir": "1" },
+          { "kg": 12.5, "reps": [10, 15], "rir": "1" },
+          { "kg": 12.5, "reps": [10, 15], "rir": "1" } ] },
+        { "id": "elevaciones-laterales-maquina", "descanso": 90, "series": [
+          { "kg": 40, "reps": [10, 12], "rir": "1" },
+          { "kg": 40, "reps": [10, 12], "rir": "1" } ] },
+        { "id": "extension-triceps-polea", "descanso": 90, "series": [
+          { "kg": 60, "reps": [10, 15], "rir": "1" },
+          { "kg": 60, "reps": [10, 15], "rir": "1" },
+          { "kg": 60, "reps": [10, 15], "rir": "1" } ] }
+      ]
+    },
+    {
+      "id": "jueves",
+      "dia": 3,
+      "nombre": "Pierna",
+      "ejercicios": [
+        { "id": "sentadilla", "descanso": 180, "nota": "Vuelta tras 2 semanas sin pierna", "series": [
+          { "kg": 65, "reps": [5, 5], "rir": "2-3" },
+          { "kg": 65, "reps": [5, 5], "rir": "2-3" },
+          { "kg": 65, "reps": [5, 5], "rir": "2-3" } ] },
+        { "id": "peso-muerto-rumano", "descanso": 150, "series": [
+          { "kg": 65, "reps": [6, 6], "rir": "2" },
+          { "kg": 65, "reps": [6, 6], "rir": "2" },
+          { "kg": 65, "reps": [6, 6], "rir": "2" } ] },
+        { "id": "sentadilla-bulgara", "descanso": 120, "series": [
+          { "kg": 30, "reps": [6, 6], "rir": "2" },
+          { "kg": 30, "reps": [6, 6], "rir": "2" } ] },
+        { "id": "prensa", "descanso": 120, "series": [
+          { "kg": 75, "reps": [9, 9], "rir": "2" },
+          { "kg": 75, "reps": [9, 9], "rir": "2" },
+          { "kg": 75, "reps": [9, 9], "rir": "2" } ] },
+        { "id": "extension-cuadriceps", "descanso": 90, "series": [
+          { "kg": 35, "reps": [11, 11], "rir": "1-2" },
+          { "kg": 35, "reps": [11, 11], "rir": "1-2" },
+          { "kg": 35, "reps": [11, 11], "rir": "1-2" } ] }
+      ]
+    },
+    {
+      "id": "viernes",
+      "dia": 4,
+      "nombre": "Espalda y bíceps",
+      "ejercicios": [
+        { "id": "press-inclinado-maquina", "descanso": 150, "series": [
+          { "kg": 65, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 65, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 65, "reps": [8, 10], "rir": "1-2" } ] },
+        { "id": "elevaciones-laterales", "descanso": 90, "series": [
+          { "kg": 10, "reps": [12, 15], "rir": "1" },
+          { "kg": 10, "reps": [12, 15], "rir": "1" },
+          { "kg": 10, "reps": [12, 15], "rir": "1" } ] },
+        { "id": "jalon-pecho", "descanso": 150, "series": [
+          { "kg": 65, "reps": [8, 10], "rir": "1" },
+          { "kg": 60, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 60, "reps": [8, 10], "rir": "1-2" } ] },
+        { "id": "remo-maquina", "descanso": 150, "series": [
+          { "kg": 80, "reps": [8, 10], "rir": "1" },
+          { "kg": 70, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 70, "reps": [8, 10], "rir": "1-2" } ] },
+        { "id": "c_mwpcc4zcgr1aki", "descanso": 120, "series": [
+          { "kg": 55, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 55, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 55, "reps": [8, 10], "rir": "1-2" } ] },
+        { "id": "curl-predicador", "descanso": 90, "series": [
+          { "kg": 35, "reps": [10, 12], "rir": "1-2" },
+          { "kg": 35, "reps": [10, 12], "rir": "1-2" },
+          { "kg": 35, "reps": [10, 12], "rir": "1-2" } ] },
+        { "id": "curl-martillo", "descanso": 90, "series": [
+          { "kg": 12.5, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 12.5, "reps": [8, 10], "rir": "1-2" },
+          { "kg": 12.5, "reps": [8, 10], "rir": "1-2" } ] }
+      ]
+    }
+  ]
+}
