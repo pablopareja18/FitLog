@@ -2,7 +2,7 @@ import { getState, setState, getActive, setActive, getExercise } from './store.j
 import { previousSets, workoutPRs, weeksSinceDeload, isWork } from './stats.js';
 import { increment } from './plan.js';
 import { BASE_LIFTS, startingLoad, roundLoad } from './coach.js';
-import { coachTargetText } from './coachProgram.js';
+import { coachTargetText, queueUpload } from './coachProgram.js';
 import { uid, todayISO, toUnit, fromUnit, parseNum, roundTo, fmtNum } from './utils.js';
 
 const txt = (kg, unit) => (kg || kg === 0) && kg !== '' ? fmtNum(roundTo(toUnit(kg, unit), unit === 'lb' ? 1 : 0.25), 2).replace(/\./g, '') : '';
@@ -164,6 +164,7 @@ export function saveActive(mode) {
     workouts: a.editing ? st.workouts.map(x => x.id === w.id ? w : x) : [...st.workouts, w],
   }));
   setActive(null);
+  queueUpload(w.id);
   return { workout: w, prs, editing: !!a.editing };
 }
 

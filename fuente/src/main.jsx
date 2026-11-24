@@ -11,7 +11,7 @@ import { ProfileTab, Onboarding } from './screens/Profile.jsx';
 import { ExerciseDetail } from './screens/ExerciseDetail.jsx';
 import { PlanWizard, PlanDetail } from './screens/Plan.jsx';
 import { ActiveWorkout, MiniWorkoutBar } from './screens/ActiveWorkout.jsx';
-import { syncProgram } from './coachProgram.js';
+import { syncProgram, flushUploads } from './coachProgram.js';
 import './styles.css';
 
 const TABS = [
@@ -46,7 +46,7 @@ function App() {
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
-    const sync = () => syncProgram().then(p => { if (p) toast(`Programa actualizado por tu entrenador${p.semana ? ` · ${p.semana}` : ''}`, 'default', 3500); });
+    const sync = () => (flushUploads(), syncProgram()).then(p => { if (p) toast(`Programa actualizado por tu entrenador${p.semana ? ` · ${p.semana}` : ''}`, 'default', 3500); });
     sync();
     const onVis = () => { if (document.visibilityState === 'visible') sync(); };
     document.addEventListener('visibilitychange', onVis);

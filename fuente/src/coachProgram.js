@@ -113,3 +113,85 @@ export async function copyForCoach(w) {
   }
   return null;
 }
+
+// ---------- Envío automático de entrenos al repositorio (para el entrenador) ----------
+const REPO = 'pablopareja18/fitlog';
+const TOKEN_KEY = 'fitlog_gh_token'; // fuera del estado: no sale en las copias exportadas
+const QUEUE_KEY = 'fitlog_upload_queue';
+
+export const getToken = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; } };
+export const setToken = t => { try { t ? localStorage.setItem(TOKEN_KEY, t.trim()) : localStorage.removeItem(TOKEN_KEY); } catch (e) {} };
+const getQueue = () => { try { return JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); } catch (e) { return []; } };
+const setQueue = q => { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) {} };
+export const pendingUploads = () => getQueue().length;
+
+const b64 = str => btoa(unescape(encodeURIComponent(str)));
+const api = (path, opts = {}) => fetch(`https://api.github.com/repos/${REPO}${path ? `/${path}` : ""}`, {
+  ...opts,
+  headers: { Authorization: `Bearer ${getToken()}`, Accept: 'application/vnd.github+json', ...(opts.headers || {}) },
+});
+
+export async function checkToken() {
+  try { const r = await api(''); if (!r.ok) return false; const j = await r.json(); return !!(j.permissions && j.permissions.push); } catch (e) { return false; }
+}
+
+function workoutPayload(w, s) {
+  const r = w.routineId && s.routines.find(x => x.id === w.routineId);
+  return {
+    fecha: w.date,
+    sesion: w.name,
+    rutina: w.routineId || null,
+    programa: s.coachProgram ? s.coachProgram.updated : null,
+    duracionMin: w.duration ? Math.round(w.duration / 60) : null,
+    notas: w.notes || '',
+    ejercicios: w.exercises.map(e => {
+      const re = r && r.exercises.find(x => x.exId === e.exId);
+      return {
+        id: e.exId,
+        nombre: getExercise(e.exId, s).name,
+        notas: e.notes || '',
+        objetivo: re && re.coachSets ? re.coachSets : null,
+        series: e.sets.map(x => ({ tipo: x.type || 'N', kg: x.kg, reps: x.reps, rir: x.rir ?? null })),
+      };
+    }),
+    resumen: workoutToCoachText(w, s),
+  };
+}
+
+async function uploadOne(id) {
+  const s = getState();
+  const w = s.workouts.find(x => x.id === id);
+  if (!w) return true; // borrado: nada que subir
+  const path = `entrenos/${w.date}_${w.id}.json`;
+  let sha;
+  const g = await api(`contents/${path}`);
+  if (g.ok) sha = (await g.json()).sha;
+  else if (g.status !== 404) return false;
+  const res = await api(`contents/${path}`, {
+    method: 'PUT',
+    body: JSON.stringify({ message: `Entreno ${w.date} · ${w.name}`, content: b64(JSON.stringify(workoutPayload(w, s), null, 2)), ...(sha ? { sha } : {}) }),
+  });
+  return res.ok;
+}
+
+let flushing = false;
+export async function flushUploads() {
+  if (flushing || !getToken()) return 0;
+  flushing = true;
+  let sent = 0;
+  try {
+    for (const id of getQueue()) {
+      let ok = false;
+      try { ok = await uploadOne(id); } catch (e) { ok = false; }
+      if (!ok) break; // sin red o sin permiso: se reintenta más tarde
+      setQueue(getQueue().filter(x => x !== id));
+      sent++;
+    }
+  } finally { flushing = false; }
+  return sent;
+}
+
+export function queueUpload(id) {
+  setQueue([...getQueue().filter(x => x !== id), id]);
+  return flushUploads();
+}

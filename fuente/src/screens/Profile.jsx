@@ -1,3 +1,4 @@
+import { getToken, setToken, checkToken, flushUploads, pendingUploads } from '../coachProgram.js';
 import React, { useRef, useState } from 'react';
 import { useStore, setState, replaceState, getState, freshState } from '../store.js';
 import { workoutVolume } from '../stats.js';
@@ -163,6 +164,8 @@ export function ProfileTab() {
           </div>
         </Section>
 
+        <CoachSection />
+
         <Section title="Tus datos">
           <div className="card nopad settings">
             <button className="setting" onClick={exportData}><Icon name="download" size={20} /><div className="grow text-left"><div className="row-title">Exportar copia de seguridad</div><div className="row-sub">Descarga un archivo con todos tus datos</div></div></button>
@@ -256,5 +259,45 @@ export function Onboarding() {
         {step > 0 && <button className="btn btn-ghost btn-block mt8" onClick={() => setStep(step - 1)}>Atrás</button>}
       </div>
     </div>
+  );
+}
+
+function CoachSection() {
+  const [, force] = React.useState(0);
+  const token = getToken();
+  const pend = pendingUploads();
+  const onTap = async () => {
+    if (!token) {
+      const t = await promptDialog({ title: 'Clave de GitHub', message: 'Pega la clave (token) que creaste solo para FitLog. Se guarda únicamente en este móvil.', confirm: 'Conectar', placeholder: 'github_pat_…' });
+      if (!t || !t.trim()) return;
+      setToken(t);
+      if (await checkToken()) { toast('Conectado. Tus entrenos se enviarán al terminar'); flushUploads().then(() => force(x => x + 1)); }
+      else { setToken(''); toast('La clave no funciona o no tiene permiso de escritura', 'error', 4000); }
+      force(x => x + 1);
+      return;
+    }
+    const v = await actionSheet({ title: 'Conexión con el entrenador', items: [
+      { label: pend ? `Enviar ${pend} pendiente${pend === 1 ? '' : 's'} ahora` : 'Comprobar conexión', icon: 'refresh', value: 'send' },
+      { label: 'Desconectar', icon: 'trash', value: 'off', danger: true },
+    ] });
+    if (v === 'send') {
+      if (!(await checkToken())) { toast('Sin conexión o clave no válida', 'error'); return; }
+      const n = await flushUploads(); toast(n ? `${n} entreno${n === 1 ? '' : 's'} enviado${n === 1 ? '' : 's'}` : 'Conexión correcta'); force(x => x + 1);
+    }
+    if (v === 'off' && await confirmDialog({ title: '¿Desconectar?', message: 'Los entrenos dejarán de enviarse al entrenador.', confirm: 'Desconectar', danger: true })) { setToken(''); force(x => x + 1); }
+  };
+  return (
+    <Section title="Entrenador">
+      <div className="card nopad settings">
+        <button className="setting" onClick={onTap}>
+          <Icon name="zap" size={20} />
+          <div className="grow text-left">
+            <div className="row-title">Envío automático de entrenos</div>
+            <div className="row-sub">{token ? (pend ? `Conectado · ${pend} pendiente${pend === 1 ? '' : 's'} de enviar` : 'Conectado · se envían al terminar') : 'Sin conectar · toca para pegar tu clave'}</div>
+          </div>
+          <Icon name="chevronR" size={16} className="muted" />
+        </button>
+      </div>
+    </Section>
   );
 }
