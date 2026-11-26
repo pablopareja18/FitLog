@@ -1,0 +1,224 @@
+{
+  "fecha": "2026-11-26",
+  "sesion": "Pierna",
+  "rutina": "coach_jueves",
+  "programa": "2026-11-24T10:30",
+  "duracionMin": 43,
+  "notas": "",
+  "ejercicios": [
+    {
+      "id": "sentadilla",
+      "nombre": "Sentadilla",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 65,
+          "min": 5,
+          "max": 5,
+          "rir": "2-3"
+        },
+        {
+          "kg": 65,
+          "min": 5,
+          "max": 5,
+          "rir": "2-3"
+        },
+        {
+          "kg": 65,
+          "min": 5,
+          "max": 5,
+          "rir": "2-3"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 5,
+          "rir": 3
+        },
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 5,
+          "rir": 3
+        },
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 5,
+          "rir": 3
+        }
+      ]
+    },
+    {
+      "id": "peso-muerto-rumano",
+      "nombre": "Peso muerto rumano",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 65,
+          "min": 6,
+          "max": 6,
+          "rir": "2"
+        },
+        {
+          "kg": 65,
+          "min": 6,
+          "max": 6,
+          "rir": "2"
+        },
+        {
+          "kg": 65,
+          "min": 6,
+          "max": 6,
+          "rir": "2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 6,
+          "rir": 6
+        },
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 6,
+          "rir": 6
+        },
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 6,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "sentadilla-bulgara",
+      "nombre": "Sentadilla búlgara",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 30,
+          "min": 6,
+          "max": 6,
+          "rir": "2"
+        },
+        {
+          "kg": 30,
+          "min": 6,
+          "max": 6,
+          "rir": "2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 30,
+          "reps": 6,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 30,
+          "reps": 6,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "prensa",
+      "nombre": "Prensa de piernas",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 75,
+          "min": 9,
+          "max": 9,
+          "rir": "2"
+        },
+        {
+          "kg": 75,
+          "min": 9,
+          "max": 9,
+          "rir": "2"
+        },
+        {
+          "kg": 75,
+          "min": 9,
+          "max": 9,
+          "rir": "2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 80,
+          "reps": 8,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 80,
+          "reps": 10,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 80,
+          "reps": 10,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "extension-cuadriceps",
+      "nombre": "Extensión de cuádriceps",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 35,
+          "min": 11,
+          "max": 11,
+          "rir": "1-2"
+        },
+        {
+          "kg": 35,
+          "min": 11,
+          "max": 11,
+          "rir": "1-2"
+        },
+        {
+          "kg": 35,
+          "min": 11,
+          "max": 11,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 35,
+          "reps": 12,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 35,
+          "reps": 12,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 35,
+          "reps": 12,
+          "rir": null
+        }
+      ]
+    }
+  ],
+  "resumen": "FitLog · Pierna · jueves, 26/11/2026 · 43 min\n- Sentadilla: 65×5 RIR3, 65×5 RIR3, 65×5 RIR3\n- Peso muerto rumano: 65×6 RIR6, 65×6 RIR6, 65×6\n- Sentadilla búlgara: 30×6, 30×6\n- Prensa de piernas: 80×8, 80×10, 80×10\n- Extensión de cuádriceps: 35×12, 35×12, 35×12"
+}
