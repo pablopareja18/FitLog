@@ -1,0 +1,217 @@
+{
+  "fecha": "2026-11-27",
+  "sesion": "Espalda y bíceps",
+  "rutina": "coach_viernes",
+  "programa": "2026-11-24T10:30",
+  "duracionMin": 69,
+  "notas": "",
+  "ejercicios": [
+    {
+      "id": "jalon-pecho",
+      "nombre": "Jalón al pecho",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 65,
+          "min": 8,
+          "max": 10,
+          "rir": "1"
+        },
+        {
+          "kg": 60,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 60,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 65,
+          "reps": 9,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 8,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 8,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "remo-maquina",
+      "nombre": "Remo en máquina",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 80,
+          "min": 8,
+          "max": 10,
+          "rir": "1"
+        },
+        {
+          "kg": 70,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 70,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 80,
+          "reps": 7,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 70,
+          "reps": 7,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 60,
+          "reps": 8,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "remo-t",
+      "nombre": "Remo en T",
+      "notas": "",
+      "objetivo": null,
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 50,
+          "reps": 10,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 45,
+          "reps": 10,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 40,
+          "reps": 10,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "curl-predicador",
+      "nombre": "Curl predicador",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 35,
+          "min": 10,
+          "max": 12,
+          "rir": "1-2"
+        },
+        {
+          "kg": 35,
+          "min": 10,
+          "max": 12,
+          "rir": "1-2"
+        },
+        {
+          "kg": 35,
+          "min": 10,
+          "max": 12,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 40,
+          "reps": 12,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 35,
+          "reps": 9,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 35,
+          "reps": 9,
+          "rir": null
+        }
+      ]
+    },
+    {
+      "id": "curl-martillo",
+      "nombre": "Curl martillo",
+      "notas": "",
+      "objetivo": [
+        {
+          "kg": 12.5,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 12.5,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        },
+        {
+          "kg": 12.5,
+          "min": 8,
+          "max": 10,
+          "rir": "1-2"
+        }
+      ],
+      "series": [
+        {
+          "tipo": "N",
+          "kg": 12.5,
+          "reps": 10,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 12.5,
+          "reps": 10,
+          "rir": null
+        },
+        {
+          "tipo": "N",
+          "kg": 12.5,
+          "reps": 8,
+          "rir": null
+        }
+      ]
+    }
+  ],
+  "resumen": "FitLog · Espalda y bíceps · viernes, 27/11/2026 · 69 min\n- Jalón al pecho: 65×9, 60×8, 60×8\n- Remo en máquina: 80×7, 70×7, 60×8\n- Remo en T: 50×10, 45×10, 40×10\n- Curl predicador: 40×12, 35×9, 35×9\n- Curl martillo: 12,5×10, 12,5×10, 12,5×8"
+}
